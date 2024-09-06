@@ -1,0 +1,46 @@
+kubectl apply -f deployment.yaml
+start --memory=6000 --cpus=4
+kubectl describe pod chess-model-66cdd746fc-6lhlk
+kubectl logs chess-model-66cdd746fc-6lhlk
+kubectl get events 
+kubectl get pods
+kubectl describe node
+kubectl exec -it self-training-pod -- /bin/bash  
+kubectl  delete pod chess-model-66cdd746fc-kxc7c --grace-period=0 --force
+kubectl  logs chess-model-66cdd746fc-6lhlk --previous
+kubectl config get-contexts
+kubectl config use-context 
+gcloud container clusters get-credentials chess-app --zone us-central1-a
+gcloud container clusters get-credentials chess-app --zone us-central1
+
+gsutil ls -L gs://chess-model-weights/models/20240203-103818-model.keras
+Get-FileHash -Path "C:\Users\ethan\Downloads\models_20240203-103818-model (1).keras" -Algorithm MD5
+
+docker build . -t chess_model
+docker run chess_model:latest
+docker exec -it reverent_bohr /bin/bash
+docker tag chess_model ethancruz/chess_model:v1.0.11
+docker push ethancruz/chess_model:v1.0.11
+
+tmux new -s train
+tmux attach -t train
+
+terraform init
+terraform plan -var-file="variables.tfvars" -target=module.my_module
+
+terraform plan -var-file="variables.tfvars" -target="google_container_cluster.gke_cluster" -target="google_container_node_pool.primary_nodes"
+terraform apply -var-file="variables.tfvars" -target="google_container_cluster.gke_cluster" -target="google_container_node_pool.primary_nodes"
+
+gcloud container clusters get-credentials my-gke-cluster --zone us-central1-a --project sourcer-app-413822
+
+terraform plan -var-file="variables.tfvars" -target="kubernetes_pod.high_resource_ml_pod" 
+terraform apply -var-file="variables.tfvars" -target="kubernetes_pod.high_resource_ml_pod"
+
+
+terraform plan -var-file="variables.tfvars" -target="google_storage_bucket.my_bucket"
+terraform apply -var-file="variables.tfvars" -target="google_storage_bucket.my_bucket"
+
+terraform plan -var-file="variables.tfvars"
+terraform apply -var-file="variables.tfvars"
+
+terraform apply -var-file="variables.tfvars" -target="kubernetes_secret.my_gcp_secret"

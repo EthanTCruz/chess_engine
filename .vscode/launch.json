@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Chess Model",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "program": "src/model/main.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Model API",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "python": "${workspaceFolder}/chess-model-env/Scripts/python.exe",
+            "args": [
+                "src.api.main:app", // Assuming your FastAPI app is defined in 'main.py' with the instance name 'app'
+                "--reload",
+                "--port",
+                "8001"
+            ],
+            "jinja": true
+        },
+    ]
+}

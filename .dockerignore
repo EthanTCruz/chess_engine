@@ -1,0 +1,24 @@
+.vscode/
+.venv/
+**/__pycache__/
+**/.pytest_cache/
+
+terraform/
+deployment.yaml
+
+# !src/model/data/EndgameTbl
+src/model/chess_model/*
+src/model/data
+src/model/data/
+!src/model/chess_model/torch_model.pth
+!src/model/data/gameData.db
+!src/model/data/means.npy
+!src/model/data/stds.npy
+logs/
+
+
+.git
+*/.git
+
+.git/
+*/.git/

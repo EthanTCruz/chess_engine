@@ -1,0 +1,32 @@
+docker build . -t chess_model
+docker run chess_model:latest
+docker exec -it elastic_darwin /bin/bash
+docker tag chess_model ethancruz/chess_model:v1.0.8
+docker push ethancruz/chess_model:v1.0.8
+
+tmux new -s train
+tmux attach -t train
+
+terraform init
+terraform plan -var-file="variables.tfvars" -target=module.my_module
+
+terraform plan -var-file="variables.tfvars" -target="google_container_cluster.gke_cluster" -target="google_container_node_pool.primary_nodes"
+terraform apply -var-file="variables.tfvars" -target="google_container_cluster.gke_cluster" -target="google_container_node_pool.primary_nodes"
+
+terraform plan -var-file="variables.tfvars" -target="kubernetes_pod.high_resource_ml_pod" 
+terraform apply -var-file="variables.tfvars" -target="kubernetes_pod.high_resource_ml_pod"
+
+
+terraform plan -var-file="variables.tfvars" -target="google_storage_bucket.my_bucket"
+terraform apply -var-file="variables.tfvars" -target="google_storage_bucket.my_bucket"
+
+terraform plan -var-file="variables.tfvars"
+terraform apply -var-file="variables.tfvars"
+
+
+docker network create my_network
+docker run -d --name my-mongo --network my_network mongo
+docker run -d --name chess_model --network my_network chess_model:latest
+
+# in chess container:
+export mongo_url=mongodb://net-mongo:27017/
