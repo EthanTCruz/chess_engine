@@ -27,3 +27,4 @@ override.tf.json
 terraform.rc
 
 src/model/data/gameData.db
+src/model/data/gameData.db
