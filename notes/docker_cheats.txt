@@ -4,6 +4,11 @@ docker exec -it elastic_darwin /bin/bash
 docker tag chess_model ethancruz/chess_model:v1.0.8
 docker push ethancruz/chess_model:v1.0.8
 
+>docker network create tasksapp-net
+>docker run --name=mongo --rm -d --network=tasksapp-net mongo
+>docker run –-name=tasksapp-python --rm -p 5000:5000 -d –-network=tasksapp-net varunkumarg/tasksapp-python:1.0.0
+
+
 tmux new -s train
 tmux attach -t train
 

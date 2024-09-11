@@ -18,11 +18,11 @@ RUN apt-get update && \
 RUN pip install --no-cache-dir -r /usr/src/app/chess_engine/pi_requirements.txt
 
 # Define environment variable
-ENV trainModel True
-ENV selfTrain True
-ENV GOOGLE_APPLICATION_CREDENTIALS '/var/secrets/google/key.json'
-ENV BUCKET_NAME "chess-model-weights"
-ENV saveToBucket True
+# ENV trainModel True
+# ENV selfTrain True
+# ENV GOOGLE_APPLICATION_CREDENTIALS '/var/secrets/google/key.json'
+# ENV BUCKET_NAME "chess-model-weights"
+# ENV saveToBucket True
 
 #CMD ["python","./chess_engine/src/model/main.py"]
 CMD while true; do sleep 10; done

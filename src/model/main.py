@@ -40,7 +40,7 @@ test_size = s.nnTestSize
 
 if s.useSamplePgn:
     pgn_file=s.samplePgn
-
+pgn_file=s.samplePgn
 
 
 
@@ -58,7 +58,8 @@ mp = move_picker()
 def main():
     # test_speeds()
     # pgn_to_db()
-    initialize_collections()
+    verify_functionality_on_sample_dataset()
+    # initialize_collections()
     return 0
 
 
@@ -134,7 +135,7 @@ def use_model(board: chess.Board = chess.Board()):
 def initialize_collections():
     mdp.open_connections()
     
-    mdp.initialize_data(batch_size=512)
+    mdp.initialize_data(batch_size=1024)
     mdp.close_connections()
 
 

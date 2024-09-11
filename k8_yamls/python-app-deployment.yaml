@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chess_model
+  labels:
+    app: chess_model
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chess_model
+  template:
+    metadata:
+      labels:
+        app: chess_model
+    spec:
+      containers:
+        - name: chess_model
+          image: ethancruz/chess_model:v1.0.14
+          env:
+          - name: mongo_url
+            value: "mongodb://mongodb-service:27017/your-db-name"
+#           ports:
+#           - containerPort: 5000
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: python-app-service
+# spec:
+#   selector:
+#     app: python-app
+#   ports:
+#   - protocol: TCP
+#     port: 5000
+#     targetPort: 5000
+#   type: LoadBalancer

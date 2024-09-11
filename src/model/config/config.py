@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     ModelFilename: str = "model.h5"
     pgn_file: str = f"{srcModelDirectory}/pgn/full_dataset/"
 
-
+    samplePgn: str = f"{srcModelDirectory}/pgn/sample_dataset/"
 
     SelfPlayModelFilename: str ="self_play_model"
     

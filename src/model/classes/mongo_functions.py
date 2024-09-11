@@ -97,7 +97,7 @@ class mongo_data_pipe():
         
 
     def create_client(self):
-        client = MongoClient(self.mongo_url)
+        client = MongoClient(self.mongo_url, maxPoolSize=100)
         return client
 
     def open_connections(self):
@@ -296,7 +296,7 @@ class mongo_data_pipe():
     def process_sqlite_boards_to_mongo(self,batch_size: int = 512):
         create_rollup_table(yield_size=batch_size)
         row_count = get_GamePositionRollup_row_size()
-        batch = fetch_all_game_positions_rollup(yield_size=batch_size)
+        batch = fetch_all_game_positions_rollup(yield_size=512)
         dataset = []  # List to accumulate serialized examples
         for game in tqdm(batch, total=row_count, desc="Processing Feature Data"):
             try:
@@ -306,19 +306,25 @@ class mongo_data_pipe():
 
                     document['_id'] = get_hash_id(doc=document)
                     
-                    dataset.append(document)
+                    dataset.append(InsertOne(document))
 
 
 
                     # Check if we've accumulated enough examples to write a batch
                     if len(dataset) >= batch_size:
-
-                        self.main_collection.insert_many(dataset)
+                        
+                        self.main_collection.bulk_write(dataset)
                         dataset = []  # Reset the list after writing
                 else:
                     return 1
             except Exception as e:
                 raise Exception(e)
+
+    # def bulk_insert(self, collected_docs, collections_and_keys):
+    #     for key, collection_client in collections_and_keys:
+    #         if collected_docs[key]:
+    #             requests = [InsertOne(doc) for doc in collected_docs[key]]
+    #             collection_client.bulk_write(requests)
                 
     def game_to_doc_evaluation(self,game):
 
