@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: chess-model
-          image: ethancruz/chess_model:v1.0.17
+          image: ethancruz/chess_model:v1.0.18
           env:
           - name: mongo_url
             value: "mongodb://mongodb-service:27017/your-db-name"
@@ -27,10 +27,10 @@ spec:
 # apiVersion: v1
 # kind: Service
 # metadata:
-#   name: python-app-service
+#   name: chess-model-service
 # spec:
 #   selector:
-#     app: python-app
+#     app: chess-model
 #   ports:
 #   - protocol: TCP
 #     port: 5000
