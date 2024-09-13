@@ -19,7 +19,7 @@ spec:
           image: ethancruz/chess_model:v1.0.18
           env:
           - name: mongo_url
-            value: "mongodb://mongodb-service:27017/your-db-name"
+            value: "mongodb://mongo:27017/your-db-name"
 #           ports:
 #           - containerPort: 5000
 

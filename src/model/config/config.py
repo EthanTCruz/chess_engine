@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     torch_model_file: str = f"{srcModelDirectory}/chess_model/torch_model.pth"
 
     mongo_host: str = "localhost"
-    mongo_port: int = 27017
+    mongo_port: str = '27017'
 
     mongo_url: str = f"mongodb://{mongo_host}:{mongo_port}/"
 
