@@ -7,5 +7,5 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi
-  storageClassName: fast-ssd
+      storage: 4Gi
+
