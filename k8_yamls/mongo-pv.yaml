@@ -4,7 +4,7 @@ metadata:
   name: mongo-pv
 spec:
   capacity:
-    storage: 2Gi
+    storage: 4Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
