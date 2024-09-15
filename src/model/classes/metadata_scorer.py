@@ -1,7 +1,7 @@
 import chess
 from chess_engine.src.model.config.config import Settings
 from chess_engine.src.model.classes.sqlite.models import GamePositions
-import time
+
 
 class metaDataBoardEval:
     def __init__(self,game: GamePositions):

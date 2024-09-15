@@ -6,11 +6,12 @@ from chess_engine.src.model.classes.MongoDBDataset import MongoDBDataset
 from chess_engine.src.model.config.config import Settings
 from tqdm import tqdm
 import torch.optim as optim
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
-from chess_engine.src.model.classes.cnn_bb_scorer import  calc_shapes
+from torch.utils.tensorboard import SummaryWriter  # For TensorBoard
+from chess_engine.src.model.classes.cnn_bb_scorer import calc_shapes
+from pymongo import MongoClient
 
 class FullModel(nn.Module):
     def __init__(self, input_planes, additional_features, output_classes=3):
@@ -64,193 +65,117 @@ class FullModel(nn.Module):
         # print(f"After softmax: {x.shape}")
 
         return x
-    
 
-class model_operator():
+
+class ModelOperator:
     def __init__(self):
+        settings = Settings()
+        self.train_collection = settings.training_collection_key
+        self.test_collection = settings.testing_collection_key
+        self.valid_collection = settings.validation_collection_key
+        self.mongo_url = settings.mongo_url
+        self.db_name = settings.db_name
+        self.batch_size = settings.DataLoaderBatchSize
+        self.num_workers = settings.num_workers
+        self.model_path = settings.torch_model_file
 
-        s = Settings()
-        
-        self.trainCollectionName=s.training_collection_key
-        self.testCollectionName=s.testing_collection_key
-        self.validCollectionName=s.validation_collection_key
+    def create_dataloaders(self, num_workers=0):
+        client =  MongoClient(self.mongo_url, maxPoolSize=100,w=1)
+        db = client[self.db_name]
 
-        self.mongoUrl=s.mongo_url
-        self.dbName=s.db_name
-        self.batch_size=s.BatchSize
+        train_collection = db[self.train_collection]
+        test_collection = db[self.test_collection]
+        valid_collection = db[self.valid_collection]
 
-        self.num_workers = s.num_workers
-        self.model_path = s.torch_model_file
+        datasets = {
+            "train": MongoDBDataset(train_collection, self.batch_size),
+            "valid": MongoDBDataset(test_collection, self.batch_size),
+            "test": MongoDBDataset(valid_collection, self.batch_size)
+        }
 
-    def create_dataloaders(self,num_workers: int = 0):
-        train_dataset = MongoDBDataset(collectionName=self.trainCollectionName, 
-                        mongoUrl=self.mongoUrl, 
-                        dbName=self.dbName, 
-                        batch_size=self.batch_size)
-        valid_dataset = MongoDBDataset(collectionName=self.validCollectionName, 
-                    mongoUrl=self.mongoUrl, 
-                    dbName=self.dbName, 
-                    batch_size=self.batch_size)
-        test_dataset = MongoDBDataset(collectionName=self.testCollectionName, 
-                mongoUrl=self.mongoUrl, 
-                dbName=self.dbName, 
-                batch_size=self.batch_size)
-    
-        if len(train_dataset) == 0 or len(valid_dataset) == 0 or len(test_dataset) == 0:
-            print("Dataset is empty. Please check the data loading process.")
-            return 0
-        else:
+        for key, dataset in datasets.items():
+            if len(dataset) == 0:
+                raise ValueError(f"{key.capitalize()} dataset is empty. Please check the data loading process.")
 
-            train_dataloader = DataLoader(train_dataset, 
-                                    batch_size=self.batch_size, 
-                                    shuffle=True, 
-                                    num_workers=num_workers)
-            test_dataloader = DataLoader(test_dataset, 
-                            batch_size=self.batch_size, 
-                            shuffle=True, 
-                            num_workers=num_workers)
-            valid_dataloader = DataLoader(valid_dataset, 
-                        batch_size=self.batch_size, 
-                        shuffle=True, 
-                        num_workers=num_workers)
-            return train_dataloader, test_dataloader, valid_dataloader
-    
+        return {
+            key: DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
+            for key, dataset in datasets.items()
+        }
 
-    def Create_and_Train_Model(self, 
-                               learning_rate: float = 0.001, 
-                               num_epochs: int = 16, 
-                               num_workers: int = 0,
-                               save_model: bool = True):
-        if num_workers < self.num_workers:
-            num_workers = self.num_workers
-        
-        train_dataloader, test_dataloader, valid_dataloader = self.create_dataloaders(num_workers=num_workers)
-        shapes = calc_shapes(batch_size=self.batch_size)
-
+    def train(self, learning_rate=0.001, num_epochs=16, num_workers=0, save_model=True):
+        num_workers = max(num_workers, self.num_workers)
+        dataloaders = self.create_dataloaders(num_workers)
+        shapes = calc_shapes(self.batch_size)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = FullModel(shapes[0][1], shapes[1][2]).to(device)
 
-        criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-        
-        for epoch in range(num_epochs):
-            model.train()
-            running_loss = 0.0
-            total_samples = 0
-            correct_samples = 0
-            
-            progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch+1}/{num_epochs}")
-            for batch_x1, batch_x2, batch_labels in progress_bar:
-                batch_x1, batch_x2, batch_labels = batch_x1.to(device), batch_x2.to(device), batch_labels.to(device)
-                # b1 = [1024,13,8,8]
-                optimizer.zero_grad()
-                outputs = model(batch_x1, batch_x2)
-                loss = criterion(outputs, batch_labels)
-                loss.backward()
-                optimizer.step()
-                
-                running_loss += loss.item()
-                total_samples += batch_x1.size(0)
-                correct_samples += self.calculate_accuracy(outputs, batch_labels)
-            
-            avg_train_loss = running_loss / len(train_dataloader)
-            train_accuracy = correct_samples / total_samples * 100
-            
-            avg_val_loss, val_accuracy, val_predictions, val_labels = self.evaluate(model, valid_dataloader, criterion, device)
-            print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%")
+        criterion = nn.CrossEntropyLoss()
+        writer = SummaryWriter(log_dir='runs/experiment_1')
 
-        test_loss, test_accuracy, test_predictions, test_labels = self.evaluate(model, test_dataloader, criterion, device)
-        print(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}%")
+        for epoch in range(num_epochs):
+            train_loss, train_acc, *_ = self._run_epoch(model, dataloaders['train'], optimizer, criterion, device, train=True)
+            val_loss, val_acc, *_ = self._run_epoch(model, dataloaders['valid'], optimizer, criterion, device)
+
+            writer.add_scalar('Loss/train', train_loss, epoch)
+            writer.add_scalar('Loss/validation', val_loss, epoch)
+            writer.add_scalar('Accuracy/train', train_acc, epoch)
+            writer.add_scalar('Accuracy/validation', val_acc, epoch)
+
+            print(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Train Accuracy: {train_acc:.2f}%, "
+                  f"Val Loss: {val_loss:.4f}, Val Accuracy: {val_acc:.2f}%")
+
+        test_loss, test_acc, test_preds, test_labels = self._run_epoch(model, dataloaders['test'], optimizer, criterion, device)
         
         if save_model:
-            self.save_model(model=model, optimizer=optimizer, model_path=self.model_path)
-        # Generate confusion matrix
-        cm = confusion_matrix(test_labels.cpu(), test_predictions.cpu())
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-        disp.plot()
-        plt.show()
+            self.save_model(model, optimizer)
 
-        
+        self._show_test_results(test_preds, test_labels)
 
-        return model
-    
-    def evaluate_with_indices(self, model, data_loader, criterion, device):
-        model.eval()
-        running_loss = 0.0
-        total_samples = 0
-        correct_samples = 0
-        all_predictions = []
-        all_labels = []
-        incorrect_indices = []
-        
-        with torch.no_grad():
-            for batch_idx, (batch_x1, batch_x2, batch_labels) in enumerate(data_loader):
+
+
+        writer.close()
+
+    def _run_epoch(self, model, dataloader, optimizer, criterion, device, train=False):
+        model.train() if train else model.eval()
+        running_loss, correct, total = 0.0, 0, 0
+        all_preds, all_labels = [], []
+
+        with torch.set_grad_enabled(train):
+            for batch_x1, batch_x2, batch_labels in tqdm(dataloader):
                 batch_x1, batch_x2, batch_labels = batch_x1.to(device), batch_x2.to(device), batch_labels.to(device)
+
+                if train:
+                    optimizer.zero_grad()
                 outputs = model(batch_x1, batch_x2)
                 loss = criterion(outputs, batch_labels)
+                if train:
+                    loss.backward()
+                    optimizer.step()
+
                 running_loss += loss.item()
-                total_samples += batch_x1.size(0)
-                correct_samples += self.calculate_accuracy(outputs, batch_labels)
-                
-                _, predicted = torch.max(outputs, 1)
-                _, labels = torch.max(batch_labels, 1)
-                all_predictions.append(predicted)
-                all_labels.append(labels)
-                
-                # Store indices of incorrect predictions
-                incorrect_indices.extend([batch_idx * data_loader.batch_size + i for i in range(batch_labels.size(0)) if predicted[i] != labels[i]])
-        
-        avg_loss = running_loss / len(data_loader)
-        accuracy = correct_samples / total_samples * 100
-        
-        all_predictions = torch.cat(all_predictions)
-        all_labels = torch.cat(all_labels)
+                correct += self.calculate_accuracy(outputs, batch_labels)
+                total += batch_labels.size(0)
 
-        return avg_loss, accuracy, all_predictions, all_labels, incorrect_indices
+                all_preds.append(outputs.argmax(dim=1))
+                all_labels.append(batch_labels.argmax(dim=1))
 
+        avg_loss = running_loss / len(dataloader)
+        accuracy = correct / total * 100
 
-    def load_and_evaluate_model(self, model_path, num_workers: int = 0):
-        if num_workers < self.num_workers:
-            num_workers = self.num_workers
+        return avg_loss, accuracy, torch.cat(all_preds), torch.cat(all_labels)
 
-        _, test_dataloader, _ = self.create_dataloaders(num_workers=num_workers)
-        shapes =  calc_shapes(batch_size=self.batch_size)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = FullModel(shapes[0][1], shapes[1][2]).to(device)
-        optimizer = optim.Adam(model.parameters())
-
-        checkpoint = torch.load(model_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        
-        criterion = nn.CrossEntropyLoss()
-        test_loss, test_accuracy, test_predictions, test_labels = self.evaluate(model, test_dataloader, criterion, device)
-        print(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}%")
-
-        # Generate confusion matrix
-        cm = confusion_matrix(test_labels.cpu(), test_predictions.cpu())
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-        disp.plot()
+    def _show_test_results(self, predictions, labels):
+        cm = confusion_matrix(labels.cpu(), predictions.cpu())
+        ConfusionMatrixDisplay(confusion_matrix=cm).plot()
         plt.show()
 
-            # Calculate precision, recall, and F1 score
-        precision = precision_score(test_labels.cpu(), test_predictions.cpu(), average=None)
-        recall = recall_score(test_labels.cpu(), test_predictions.cpu(), average=None)
-        f1 = f1_score(test_labels.cpu(), test_predictions.cpu(), average=None)
+        precision = precision_score(labels.cpu(), predictions.cpu(), average=None)
+        recall = recall_score(labels.cpu(), predictions.cpu(), average=None)
+        f1 = f1_score(labels.cpu(), predictions.cpu(), average=None)
 
-        for i in range(len(precision)):
-            print(f"Class {i}:")
-            print(f"  Precision: {precision[i]:.4f}")
-            print(f"  Recall: {recall[i]:.4f}")
-            print(f"  F1-Score: {f1[i]:.4f}")
-
-    def save_model(self, model, optimizer, model_path):
-        torch.save({
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-        }, model_path)
-        print(f"Model saved to {model_path}")
-
+        for i, (p, r, f) in enumerate(zip(precision, recall, f1)):
+            print(f"Class {i}: Precision: {p:.4f}, Recall: {r:.4f}, F1-Score: {f:.4f}")
 
     def load_model(self, model_path):
         shapes = calc_shapes(batch_size=self.batch_size)
@@ -264,74 +189,15 @@ class model_operator():
         self.model.eval()
         print(f"Model loaded from {model_path}")
 
-    def predict_single_example(self,bitboards, metadata):
-        """
-        Uses the loaded model to make a prediction on a single example.
+    def save_model(self, model, optimizer):
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+        }, self.model_path)
+        print(f"Model saved to {self.model_path}")
 
-        Arguments:
-        model -- The loaded PyTorch model.
-        bitboard_example -- The bitboard input, a single example as a tensor of shape (1, n_C, H, W).
-        metadata_example -- The metadata input, a single example as a tensor of shape (1, n_features).
-
-        Returns:
-        prediction -- The model's predicted class for the input example.
-        """
-        # self.model.eval()  # Set the model to evaluation mode
-
-        # Ensure the example tensors are on the same device as the model
-        device = next(self.model.parameters()).device
-        bitboards = bitboards.to(device)
-        metadata = metadata.to(device)
-
-        with torch.no_grad():  # No need to compute gradients
-            output = self.model(bitboards, metadata)
-            prediction = torch.argmax(output, dim=1)  # Get the index of the class with the highest probability
-
-
-        return prediction.item()
-        
-    
-    def evaluate(self, model, data_loader, criterion, device):
-        model.eval()
-        running_loss = 0.0
-        total_samples = 0
-        correct_samples = 0
-        all_predictions = []
-        all_labels = []
-        with torch.no_grad():
-            for batch_x1, batch_x2, batch_labels in data_loader:
-                batch_x1, batch_x2, batch_labels = batch_x1.to(device), batch_x2.to(device), batch_labels.to(device)
-                outputs = model(batch_x1, batch_x2)
-                loss = criterion(outputs, batch_labels)
-                running_loss += loss.item()
-                total_samples += batch_x1.size(0)
-                correct_samples += self.calculate_accuracy(outputs, batch_labels)
-                
-                _, predicted = torch.max(outputs, 1)
-                _, labels = torch.max(batch_labels, 1)
-                all_predictions.append(predicted)
-                all_labels.append(labels)
-        
-        avg_loss = running_loss / len(data_loader)
-        accuracy = correct_samples / total_samples * 100
-        
-        all_predictions = torch.cat(all_predictions)
-        all_labels = torch.cat(all_labels)
-        
-        return avg_loss, accuracy, all_predictions, all_labels
-
-    def calculate_accuracy(self, outputs, labels):
+    @staticmethod
+    def calculate_accuracy(outputs, labels):
         _, predicted = torch.max(outputs, 1)
         _, labels = torch.max(labels, 1)
-        correct = (predicted == labels).sum().item()
-        return correct
-    
-    
-
-    # def calc_shapes(self,dataloader):
-
-    #     for batch in dataloader:
-    #         batch_x1, batch_x2, batch_labels = batch
-
-    #         return batch_x1.shape, batch_x2.shape, batch_labels.shape
-
+        return (predicted == labels).sum().item()

@@ -3,7 +3,9 @@ from math import sqrt
 class Settings(BaseSettings): 
 
     BatchSize: int = 1024
-    
+    DataLoaderBatchSize: int = 512
+    num_workers: int = 0
+
     nnGenBatchSize: int = 1
     
     nnBatchSize: int = 100
@@ -62,16 +64,19 @@ class Settings(BaseSettings):
 
     torch_model_file: str = f"{srcModelDirectory}/chess_model/torch_model.pth"
 
-    mongo_host: str = "localhost"
-    mongo_port: str = '27017'
+    mongo_host: str = "10.1.135.1"
+    # mongo_port: str = '27017'
+    mongo_port: str = '30017'
 
-    mongo_url: str = f"mongodb://{mongo_host}:{mongo_port}/"
+    # mongo_url: str = f"mongodb://{mongo_host}:{mongo_port}/"
+    # "mongodb://mongo:27017/your-db-name"
+    mongo_url: str = "mongodb://192.168.68.50:30017"
 
     redis_host: str = "192.168.68.50"
     redis_port: int = 6379
     redis_db: int = 1
     
-    num_workers: int = 0
+
 
     halfMoveBin: int = 25
 

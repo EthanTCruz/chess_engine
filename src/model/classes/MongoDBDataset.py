@@ -6,7 +6,7 @@ from chess_engine.src.model.config.config import Settings
 import numpy as np
 
 class MongoDBDataset(Dataset):
-    def __init__(self, collectionName, mongoUrl, dbName, batch_size=1024):
+    def __init__(self, collection, batch_size=1024):
         s = Settings()
 
         self.means = np.load(s.np_means_file)
@@ -15,9 +15,8 @@ class MongoDBDataset(Dataset):
         self.batch_size = batch_size
         
 
-        client = MongoClient(mongoUrl)
-        db = client[dbName]
-        self.collection = db[collectionName]
+
+        self.collection = collection
 
 
         

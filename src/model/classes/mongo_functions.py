@@ -97,7 +97,7 @@ class mongo_data_pipe():
         
 
     def create_client(self):
-        client = MongoClient(self.mongo_url, maxPoolSize=100)
+        client = MongoClient(self.mongo_url, maxPoolSize=100,w=1)
         return client
 
     def open_connections(self):

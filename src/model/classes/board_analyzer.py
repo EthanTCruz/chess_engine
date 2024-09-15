@@ -5,7 +5,7 @@ import chess
 import torch
 from chess_engine.src.model.config.config import Settings
 from  chess_engine.src.model.classes.cnn_bb_scorer import boardCnnEval
-from chess_engine.src.model.classes.torch_model import model_operator
+from chess_engine.src.model.classes.torch_model import ModelOperator
 from chess_engine.src.model.classes.mongo_functions import create_cnn_input
 
 class board_analyzer():
@@ -16,7 +16,7 @@ class board_analyzer():
     def set_parameters(self,kwargs):
         s = Settings()
 
-        self.mdp = model_operator()
+        self.mdp = ModelOperator()
         self.mdp.load_model(model_path=s.torch_model_file)
         self.evaluator = boardCnnEval()
 
