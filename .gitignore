@@ -26,5 +26,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+runs/
+
 src/model/data/gameData.db
 src/model/data/gameData.db
