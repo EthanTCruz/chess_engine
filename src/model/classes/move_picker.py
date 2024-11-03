@@ -1,4 +1,4 @@
-from chess_engine.src.model.classes.board_analyzer import board_analyzer
+from chess_engine.src.model.classes.bitboard_processing.board_analyzer import board_analyzer
 from chess_engine.src.model.classes.sqlite.dependencies import find_rollup_move
 
 from chess_engine.src.model.classes.MCTS import mcts

@@ -3,8 +3,13 @@ from sqlalchemy.orm import relationship, declarative_base
 import json
 import hashlib
 from chess_engine.src.model.config.config import settings
+from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import Bitboard_Creator
 
 Base = declarative_base()
+
+bc = Bitboard_Creator()
+bitboards_dict = bc.get_all_bitboards()
+
 
 def get_hash(piece_positions,castling_rights,en_passant,turn):
         game_string = (
@@ -18,6 +23,21 @@ def get_hash(piece_positions,castling_rights,en_passant,turn):
         hex_dig = hash_object.hexdigest()
         return hex_dig
 
+def create_dynamic_model(class_name, attributes_dict,backref_name):
+    # Define a dictionary to hold the columns
+    columns = {
+        '__tablename__': class_name.lower(),
+    }
+
+    columns['id'] = Column(Integer, ForeignKey('GamePositions.id'), primary_key=True)
+    
+
+    for key in attributes_dict.keys():
+        columns[key] = Column(Integer)
+        
+    columns['game_position'] = relationship("GamePositions", backref=backref_name)
+
+    return type(class_name, (GamePositions,), columns)
 
 class GamePositions(Base):
     __tablename__ = "GamePositions"
@@ -77,26 +97,13 @@ class GamePositions(Base):
             black_wins=win_buckets["black_wins"],
             stalemates=win_buckets["stalemates"]
         )
+    
+    
+GamePositionRollup = create_dynamic_model("GamePositionRollup",bitboards_dict,"rollup_position")
+TrainGamePositions = create_dynamic_model("TrainGamePositions",bitboards_dict,"train_position")
+TestGamePositions = create_dynamic_model("TestGamePositions",bitboards_dict,"test_position")
+ValidationGamePositions = create_dynamic_model("ValidationGamePositions",bitboards_dict,"validation_position")
 
-class GamePositionRollup(GamePositions):
-    __tablename__ = "GamePositionRollup"
-    id = Column(Integer, ForeignKey("GamePositions.id"), primary_key=True)
-    game_position = relationship("GamePositions", backref="rollup_position")
 
-# Using joined table inheritance
-class TrainGamePositions(GamePositions):
-    __tablename__ = "TrainGamePositions"
-    id = Column(Integer, ForeignKey("GamePositions.id"), primary_key=True)
-    game_position = relationship("GamePositions", backref="train_position")
-
-class TestGamePositions(GamePositions):
-    __tablename__ = "TestGamePositions"
-    id = Column(Integer, ForeignKey("GamePositions.id"), primary_key=True)
-    game_position = relationship("GamePositions", backref="test_position")
-
-class ValidationGamePositions(GamePositions):
-    __tablename__ = "ValidationGamePositions"
-    id = Column(Integer, ForeignKey("GamePositions.id"), primary_key=True)
-    game_position = relationship("GamePositions", backref="validation_position")
 
 

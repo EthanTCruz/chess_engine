@@ -1,9 +1,10 @@
-from chess_engine.src.model.classes.sqlite.database import SessionLocal
+
 from chess_engine.src.model.classes.sqlite.models import (GamePositions,
                                                           GamePositionRollup,
                                                           TrainGamePositions,
                                                           TestGamePositions,
                                                           ValidationGamePositions)
+from chess_engine.src.model.classes.sqlite.database import SessionLocal
 from chess_engine.src.model.config.config import Settings
 from sqlalchemy.orm import Session
 from typing import List, Tuple

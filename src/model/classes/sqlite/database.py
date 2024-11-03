@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 
 from chess_engine.src.model.classes.sqlite.models import Base
 
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
 
 

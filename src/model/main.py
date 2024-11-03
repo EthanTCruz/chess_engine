@@ -25,7 +25,7 @@ from chess_engine.src.model.config.config import Settings
 from chess_engine.src.model.classes.endgame import endgamePicker
 from chess_engine.src.model.classes.mongo_functions import mongo_data_pipe
 from chess_engine.src.model.classes.torch_model import ModelOperator
-from chess_engine.src.model.classes.board_analyzer import board_analyzer
+from chess_engine.src.model.classes.bitboard_processing.board_analyzer import board_analyzer
 from chess_engine.src.model.classes.move_picker import move_picker
 
 
@@ -60,8 +60,8 @@ def main():
     # test_speeds()
     # pgn_to_db()
     get_data(pgn_file)
-    preprocess_data()
-    split_game_positions_in_batches(train_pct = .6, test_pct = .2, validation_pct = 0.2)
+    # preprocess_data()
+    # split_game_positions_in_batches(train_pct = .6, test_pct = .2, validation_pct = 0.2)
     # full_data_to_ml()
     # initialize_collections()
     return 0
