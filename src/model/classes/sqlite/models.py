@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import Column, String, Integer, ForeignKey, event
+from sqlalchemy.orm import relationship, declarative_base, column_property
 import json
 import hashlib
 from chess_engine.src.model.config.config import settings
@@ -30,10 +30,10 @@ def create_dynamic_model(class_name, attributes_dict,backref_name):
     }
 
     columns['id'] = Column(Integer, ForeignKey('GamePositions.id'), primary_key=True)
-    
+    columns['fen'] = Column(String, index=True)
 
     for key in attributes_dict.keys():
-        columns[key] = Column(Integer)
+        columns[key] = Column(String)
         
     columns['game_position'] = relationship("GamePositions", backref=backref_name)
 
@@ -51,9 +51,11 @@ class GamePositions(Base):
     black_wins = Column(Integer)
     stalemates = Column(Integer)
 
-    fen = f"{piece_positions} {turn} {castling_rights} {en_passant} {0} {1}"
-
     
+
+
+
+
 
     @property
     def get_hash(self):

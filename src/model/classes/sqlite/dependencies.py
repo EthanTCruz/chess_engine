@@ -5,6 +5,7 @@ from chess_engine.src.model.classes.sqlite.models import (GamePositions,
                                                           TestGamePositions,
                                                           ValidationGamePositions)
 from chess_engine.src.model.classes.sqlite.database import SessionLocal
+from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import get_all_bitboards_dict
 from chess_engine.src.model.config.config import Settings
 from sqlalchemy.orm import Session
 from typing import List, Tuple
@@ -14,6 +15,7 @@ import re
 import pandas as pd
 import numpy as np
 import json 
+from tqdm import tqdm
 
 n_half_moves = Settings().halfMoveBin
 
@@ -320,7 +322,7 @@ class GamePositionWithWinBuckets:
 
         })
 
-def create_rollup_table(yield_size: int = 200,db: Session = next(get_db())):
+def create_rollup_table(yield_size: int = 200, db: Session = next(get_db())):
     try:
         # Constructing the query with group by and sum
         query = db.query(
@@ -328,28 +330,33 @@ def create_rollup_table(yield_size: int = 200,db: Session = next(get_db())):
             GamePositions.castling_rights, 
             GamePositions.en_passant, 
             GamePositions.turn, 
-
             func.sum(GamePositions.white_wins).label('white_wins'),
             func.sum(GamePositions.black_wins).label('black_wins'),
             func.sum(GamePositions.stalemates).label('stalemates'),
-
         ).group_by(
             GamePositions.piece_positions, 
             GamePositions.castling_rights, 
             GamePositions.en_passant, 
             GamePositions.turn, 
-
         )
 
+        # Get the total count of rows
+        total_count = query.count()
+        
+        # Yield results in batches with tqdm progress bar
         gen = query.yield_per(yield_size)
+        for result in tqdm(gen, total=total_count, desc="Processing GamePositions"):
+            fen = f"{result.piece_positions} {result.turn} {result.castling_rights} {result.en_passant} 0 1"
+            board = chess.Board(fen)
+            results_dict = get_all_bitboards_dict(board=board)
 
-        for result in gen:
             game = GamePositionRollup(
                 piece_positions=result.piece_positions,
                 castling_rights=result.castling_rights,
                 en_passant=result.en_passant,
                 turn=result.turn,
-
+                fen=fen,
+                **results_dict,
                 white_wins=result.white_wins,
                 black_wins=result.black_wins,
                 stalemates=result.stalemates

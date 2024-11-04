@@ -26,16 +26,7 @@ def split_game_positions_in_batches(train_pct: float = settings.nnTrainSize,
     offset = 0
     while True:
         # Retrieve a batch of records from GamePositions
-        game_positions_batch = db.query(GamePositionRollup).options(load_only(
-            GamePositionRollup.id,
-            GamePositionRollup.piece_positions,
-            GamePositionRollup.castling_rights,
-            GamePositionRollup.en_passant,
-            GamePositionRollup.turn,
-            GamePositionRollup.white_wins,
-            GamePositionRollup.black_wins,
-            GamePositionRollup.stalemates
-        )).offset(offset).limit(batch_size).all()
+        game_positions_batch = db.query(GamePositionRollup).offset(offset).limit(batch_size).all()
 
         if not game_positions_batch:
             # No more records to process
@@ -57,15 +48,16 @@ def split_game_positions_in_batches(train_pct: float = settings.nnTrainSize,
 
         # Insert the records into respective tables
         for record in train_records:
-            train_record = TrainGamePositions(**{column.name: getattr(record, column.name) for column in GamePositions.__table__.columns if column.name != "id"})
+            train_record = TrainGamePositions(**{column.name: getattr(record, column.name) for column in GamePositionRollup.__table__.columns if column.name != "id"})
+            # print(train_record)
             db.add(train_record)
 
         for record in test_records:
-            test_record = TestGamePositions(**{column.name: getattr(record, column.name) for column in GamePositions.__table__.columns if column.name != "id"})
+            test_record = TestGamePositions(**{column.name: getattr(record, column.name) for column in GamePositionRollup.__table__.columns if column.name != "id"})
             db.add(test_record)
 
         for record in validation_records:
-            validation_record = ValidationGamePositions(**{column.name: getattr(record, column.name) for column in GamePositions.__table__.columns if column.name != "id"})
+            validation_record = ValidationGamePositions(**{column.name: getattr(record, column.name) for column in GamePositionRollup.__table__.columns if column.name != "id"})
             db.add(validation_record)
 
         # Commit the changes to the database after processing the batch

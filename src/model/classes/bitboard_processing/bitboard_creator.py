@@ -19,7 +19,7 @@ class Bitboard_Creator:
         
     def get_base_bitboards_dict(self,board):
         bitboards = {
-            f"{self.color_map[color]} {self.piece_map[piece]}": int(board.pieces(piece, color))
+            f"{self.color_map[color]} {self.piece_map[piece]}": str(int(board.pieces(piece, color)))
             for color in [chess.WHITE, chess.BLACK]
             for piece in chess.PIECE_TYPES
         }
@@ -40,9 +40,17 @@ class Bitboard_Creator:
 
         return results
 
+
+
 def bitboards_to_array(bb: np.ndarray) -> np.ndarray:
     bb = np.asarray(bb, dtype=np.uint64)[:, np.newaxis]
     s = 8 * np.arange(7, -1, -1, dtype=np.uint64)
     b = (bb >> s).astype(np.uint8)
     b = np.unpackbits(b, bitorder="little")
     return b.reshape(-1, 8, 8)
+
+
+bc = Bitboard_Creator()
+
+def get_all_bitboards_dict(board: chess.Board):
+    return bc.get_all_bitboards(board=board)

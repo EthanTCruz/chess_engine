@@ -60,8 +60,8 @@ def main():
     # test_speeds()
     # pgn_to_db()
     get_data(pgn_file)
-    # preprocess_data()
-    # split_game_positions_in_batches(train_pct = .6, test_pct = .2, validation_pct = 0.2)
+    preprocess_data()
+    split_game_positions_in_batches(train_pct = .6, test_pct = .2, validation_pct = 0.2)
     # full_data_to_ml()
     # initialize_collections()
     return 0
@@ -73,20 +73,18 @@ def main():
 
 
 def get_data(pgn_file = pgn_file,db: Session = SessionLocal()):
+    cowsay.cow(f"Converting PGN's to SQLITE")    
     delete_all_game_positions(db = db)
     pgn_obj = pgn_processor(pgn_file=pgn_file)
     pgn_obj.pgn_fen_to_sqlite()
 
 def preprocess_data():
+    cowsay.cow(f"Converting pgn file to sqlite db")    
     delete_all_rollup_game_positions()
     create_rollup_table(yield_size=500,db=SessionLocal())
 
 def process_data():
-    mdp = mongo_data_pipe()
-    mdp.open_connections()
-    
-    mdp.initialize_data(batch_size=1024)
-    mdp.close_connections()
+    split_game_positions_in_batches()
 
 
 
