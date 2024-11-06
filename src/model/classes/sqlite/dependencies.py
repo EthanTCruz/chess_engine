@@ -1,4 +1,3 @@
-
 from chess_engine.src.model.classes.sqlite.models import (GamePositions,
                                                           GamePositionRollup,
                                                           TrainGamePositions,
