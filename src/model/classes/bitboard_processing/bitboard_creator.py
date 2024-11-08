@@ -52,5 +52,7 @@ def bitboards_to_array(bb: np.ndarray) -> np.ndarray:
 
 bc = Bitboard_Creator()
 
-def get_all_bitboards_dict(board: chess.Board):
+def get_all_bitboards_dict(board: chess.Board = chess.Board()):
     return bc.get_all_bitboards(board=board)
+
+sample_bitboard_dict = get_all_bitboards_dict()

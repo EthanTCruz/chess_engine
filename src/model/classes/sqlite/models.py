@@ -3,12 +3,11 @@ from sqlalchemy.orm import relationship, declarative_base, column_property
 import json
 import hashlib
 from chess_engine.src.model.config.config import settings
-from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import Bitboard_Creator
+from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
 
 Base = declarative_base()
 
-bc = Bitboard_Creator()
-bitboards_dict = bc.get_all_bitboards()
+
 
 
 def get_hash(piece_positions,castling_rights,en_passant,turn):
@@ -101,10 +100,10 @@ class GamePositions(Base):
         )
     
     
-GamePositionRollup = create_dynamic_model("GamePositionRollup",bitboards_dict,"rollup_position")
-TrainGamePositions = create_dynamic_model("TrainGamePositions",bitboards_dict,"train_position")
-TestGamePositions = create_dynamic_model("TestGamePositions",bitboards_dict,"test_position")
-ValidationGamePositions = create_dynamic_model("ValidationGamePositions",bitboards_dict,"validation_position")
+GamePositionRollup = create_dynamic_model("GamePositionRollup",sample_bitboard_dict,"rollup_position")
+TrainGamePositions = create_dynamic_model("TrainGamePositions",sample_bitboard_dict,"train_position")
+TestGamePositions = create_dynamic_model("TestGamePositions",sample_bitboard_dict,"test_position")
+ValidationGamePositions = create_dynamic_model("ValidationGamePositions",sample_bitboard_dict,"validation_position")
 
 
 

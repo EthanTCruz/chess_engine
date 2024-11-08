@@ -3,7 +3,7 @@ from chess_engine.src.model.classes.sqlite.models import (GamePositions,
                                                           TrainGamePositions,
                                                           TestGamePositions,
                                                           ValidationGamePositions)
-from chess_engine.src.model.classes.sqlite.database import SessionLocal
+from chess_engine.src.model.classes.sqlite.database import SessionLocal, get_db
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import get_all_bitboards_dict
 from chess_engine.src.model.config.config import Settings
 from sqlalchemy.orm import Session
@@ -19,12 +19,6 @@ from tqdm import tqdm
 n_half_moves = Settings().halfMoveBin
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 def delete_all_game_positions(db: Session = next(get_db())):
     try:
