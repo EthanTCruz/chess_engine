@@ -39,6 +39,8 @@ class Bitboard_Creator:
         results = bitboards_to_array(np.array(list(bitboards.values())))
 
         return results
+    
+
 
 
 

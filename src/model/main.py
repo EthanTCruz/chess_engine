@@ -62,6 +62,7 @@ def main():
     get_data(pgn_file)
     preprocess_data()
     split_game_positions_in_batches(train_pct = .6, test_pct = .2, validation_pct = 0.2)
+    train_model()
     # full_data_to_ml()
     # initialize_collections()
     return 0

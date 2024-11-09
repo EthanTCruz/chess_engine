@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from chess_engine.src.model.classes.MongoDBDataset import MongoDBDataset
+from chess_engine.src.model.classes.sqlite.dataloader import SQLAlchemyDataset
 from chess_engine.src.model.config.config import Settings
 from tqdm import tqdm
 import torch.optim as optim
@@ -11,86 +11,77 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter  # For TensorBoard
 from chess_engine.src.model.classes.cnn_bb_scorer import calc_shapes
-from pymongo import MongoClient
+from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
+from chess_engine.src.model.classes.sqlite.models import (GamePositions,
+                                                          GamePositionRollup,
+                                                          TrainGamePositions,
+                                                          ValidationGamePositions,
+                                                          TestGamePositions)
 
-class FullModel(nn.Module):
-    def __init__(self, input_planes, additional_features, output_classes=3):
-        super(FullModel, self).__init__()
-
-
-
-
-        self.conv1 = nn.Conv2d(in_channels=input_planes, out_channels=64, kernel_size=3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+class AlphaZeroNet(nn.Module):
+    def __init__(self, n_bitboards, board_size=8):
+        super(AlphaZeroNet, self).__init__()
         
-        self.fc1 = nn.Linear(256 * 8 * 8 + 64 * 8 * 8, 1024)  # Adjust input dimension to match concatenated features
-        self.fc2 = nn.Linear(1024, output_classes)
-
-        self.fc_additional = nn.Linear(additional_features, 64 * 8 * 8)
+        # Input layer: number of channels equals n_bitboards
+        self.conv1 = nn.Conv2d(n_bitboards, 256, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
         
-    def forward(self, bitboards, metadata):
-        # print(f"After start shape: {bitboards.shape}")
-        x = F.relu(self.conv1(bitboards))
-        # print(f"After conv1: {x.shape}")
+        # Batch normalization layers for each convolution layer
+        self.bn1 = nn.BatchNorm2d(256)
+        self.bn2 = nn.BatchNorm2d(256)
+        self.bn3 = nn.BatchNorm2d(256)
+        self.bn4 = nn.BatchNorm2d(256)
+        
+        # Policy head
+        self.policy_conv = nn.Conv2d(256, 2, kernel_size=1)  # 2 channels for the policy output
+        self.policy_bn = nn.BatchNorm2d(2)
+        self.policy_fc = nn.Linear(2 * board_size * board_size, board_size * board_size)
+        
+        # Value head
+        self.value_conv = nn.Conv2d(256, 1, kernel_size=1)   # 1 channel for the value output
+        self.value_bn = nn.BatchNorm2d(1)
+        self.value_fc1 = nn.Linear(board_size * board_size, 256)
+        self.value_fc2 = nn.Linear(256, 3)  # 3 outputs for white win, black win, draw
 
-        x = F.relu(self.conv2(x))
-        # print(f"After conv2: {x.shape}")
-
-        x = F.relu(self.conv3(x))
-        # print(f"After conv3: {x.shape}")
-
-        x = x.view(x.size(0), -1)  # Flatten the tensor
-        # print(f"After flatten: {x.shape}")
-
-        # Process metadata through fc_additional
-        metadata_processed = F.relu(self.fc_additional(metadata))
-        # print(f"After fc_additional: {metadata_processed.shape}")
-
-        # Flatten metadata_processed
-        metadata_processed = metadata_processed.view(metadata_processed.size(0), -1)
-        # print(f"After flatten metadata_processed: {metadata_processed.shape}")
-
-        # Concatenate bitboards and metadata features
-        combined_features = torch.cat((x, metadata_processed), dim=1)
-        # print(f"After concatenation: {combined_features.shape}")
-
-        x = F.relu(self.fc1(combined_features))
-        # print(f"After fc1: {x.shape}")
-
-        x = self.fc2(x)
-        # print(f"After fc2: {x.shape}")
-
-        x = F.log_softmax(x, dim=1)  # Softmax output
-        # print(f"After softmax: {x.shape}")
-
-        return x
-
+    def forward(self, x):
+        # Convolutional layers with ReLU and batch normalization
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.relu(self.bn4(self.conv4(x)))
+        
+        # Policy head
+        policy = F.relu(self.policy_bn(self.policy_conv(x)))
+        policy = policy.view(policy.size(0), -1)  # Flatten
+        policy = self.policy_fc(policy)
+        policy = F.log_softmax(policy, dim=1)  # Log softmax for policy distribution
+        
+        # Value head
+        value = F.relu(self.value_bn(self.value_conv(x)))
+        value = value.view(value.size(0), -1)  # Flatten
+        value = F.relu(self.value_fc1(value))
+        value = self.value_fc2(value)
+        value = F.log_softmax(value, dim=1)  # Softmax for win, lose, draw probabilities
+        
+        return policy, value
 
 class ModelOperator:
     def __init__(self):
         settings = Settings()
-        self.train_collection = settings.training_collection_key
-        self.test_collection = settings.testing_collection_key
-        self.valid_collection = settings.validation_collection_key
-        self.mongo_url = settings.mongo_url
-        self.db_name = settings.db_name
+
+
         self.batch_size = settings.DataLoaderBatchSize
         self.num_workers = settings.num_workers
         self.model_path = settings.torch_model_file
 
     def create_dataloaders(self, num_workers=0):
-        client =  MongoClient(self.mongo_url, maxPoolSize=100,w=1)
-        db = client[self.db_name]
-
-        train_collection = db[self.train_collection]
-        test_collection = db[self.test_collection]
-        valid_collection = db[self.valid_collection]
 
         datasets = {
-            "train": MongoDBDataset(train_collection, self.batch_size),
-            "valid": MongoDBDataset(test_collection, self.batch_size),
-            "test": MongoDBDataset(valid_collection, self.batch_size)
+            "train": SQLAlchemyDataset(TrainGamePositions, self.batch_size),
+            "valid": SQLAlchemyDataset(ValidationGamePositions, self.batch_size),
+            "test": SQLAlchemyDataset(TestGamePositions, self.batch_size)
         }
 
         for key, dataset in datasets.items():
@@ -105,9 +96,9 @@ class ModelOperator:
     def train(self, learning_rate=0.001, num_epochs=16, num_workers=0, save_model=True):
         num_workers = max(num_workers, self.num_workers)
         dataloaders = self.create_dataloaders(num_workers)
-        shapes = calc_shapes(self.batch_size)
+
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = FullModel(shapes[0][1], shapes[1][2]).to(device)
+        model = AlphaZeroNet(n_bitboards=len(sample_bitboard_dict.keys())).to(device)
 
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()
@@ -142,28 +133,34 @@ class ModelOperator:
         all_preds, all_labels = [], []
 
         with torch.set_grad_enabled(train):
-            for batch_x1, batch_x2, batch_labels in tqdm(dataloader):
-                batch_x1, batch_x2, batch_labels = batch_x1.to(device), batch_x2.to(device), batch_labels.to(device)
+            for batch_x1, batch_labels in tqdm(dataloader):
+                batch_x1, batch_labels = batch_x1.to(device), batch_labels.to(device)
 
                 if train:
                     optimizer.zero_grad()
-                outputs = model(batch_x1, batch_x2)
-                loss = criterion(outputs, batch_labels)
+
+                # Unpack policy and value outputs
+                policy_output, value_output = model(batch_x1)
+                
+                # Compute loss only on the value output
+                loss = criterion(value_output, batch_labels)
+
                 if train:
                     loss.backward()
                     optimizer.step()
 
                 running_loss += loss.item()
-                correct += self.calculate_accuracy(outputs, batch_labels)
+                correct += self.calculate_accuracy(value_output, batch_labels)
                 total += batch_labels.size(0)
 
-                all_preds.append(outputs.argmax(dim=1))
+                all_preds.append(value_output.argmax(dim=1))
                 all_labels.append(batch_labels.argmax(dim=1))
 
         avg_loss = running_loss / len(dataloader)
         accuracy = correct / total * 100
 
         return avg_loss, accuracy, torch.cat(all_preds), torch.cat(all_labels)
+
 
     def _show_test_results(self, predictions, labels):
         cm = confusion_matrix(labels.cpu(), predictions.cpu())
@@ -180,7 +177,7 @@ class ModelOperator:
     def load_model(self, model_path):
         shapes = calc_shapes(batch_size=self.batch_size)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = FullModel(shapes[0][1], shapes[1][2]).to(device)
+        self.model = AlphaZeroNet(n_bitboards=len(sample_bitboard_dict.keys())).to(device)
         self.optimizer = optim.Adam(self.model.parameters())
 
         checkpoint = torch.load(model_path,weights_only=True)

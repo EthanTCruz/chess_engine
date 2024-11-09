@@ -1,78 +1,20 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, event
-from sqlalchemy.orm import relationship, declarative_base, column_property
-import json
+from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship
 import hashlib
-from chess_engine.src.model.config.config import settings
+import json
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
 
 Base = declarative_base()
 
 
-
-
-def get_hash(piece_positions,castling_rights,en_passant,turn):
-        game_string = (
-            piece_positions
-            + castling_rights
-            + en_passant
-            + turn
-            
-        )
-        hash_object = hashlib.sha256(game_string.encode())
-        hex_dig = hash_object.hexdigest()
-        return hex_dig
-
-def create_dynamic_model(class_name, attributes_dict,backref_name):
-    # Define a dictionary to hold the columns
-    columns = {
-        '__tablename__': class_name.lower(),
-    }
-
-    columns['id'] = Column(Integer, ForeignKey('GamePositions.id'), primary_key=True)
-    columns['fen'] = Column(String, index=True)
-
-    for key in attributes_dict.keys():
-        columns[key] = Column(String)
-        
-    columns['game_position'] = relationship("GamePositions", backref=backref_name)
-
-    return type(class_name, (GamePositions,), columns)
-
-class GamePositions(Base):
-    __tablename__ = "GamePositions"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    piece_positions = Column(String, index=True)
-    castling_rights = Column(String, index=True)
-    en_passant = Column(String, index=True)
-    turn = Column(String, index=True)
-
-    white_wins = Column(Integer)
-    black_wins = Column(Integer)
-    stalemates = Column(Integer)
-
-    
-
-
-
-
-
-    @property
-    def get_hash(self):
-        game_string = (
-            self.piece_positions
-            + self.castling_rights
-            + self.en_passant
-            + self.turn
-            
-        )
-        hash_object = hashlib.sha256(game_string.encode())
-        hex_dig = hash_object.hexdigest()
-        return hex_dig
+class WinBucketsMixin:
+    white_wins = Column(Integer, default=0)
+    black_wins = Column(Integer, default=0)
+    stalemates = Column(Integer, default=0)
 
     @property
     def total_wins(self):
-        total_wins = self.white_wins + self.black_wins + self.stalemates
-        return total_wins
+        return self.white_wins + self.black_wins + self.stalemates
 
     @property
     def win_buckets(self):
@@ -84,27 +26,52 @@ class GamePositions(Base):
             return [mean_w, mean_b, mean_s]
         else:
             return [0, 0, 0]
+        
+class GamePositions(Base,WinBucketsMixin):
+    __tablename__ = "GamePositions"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    piece_positions = Column(String, index=True)
+    castling_rights = Column(String, index=True)
+    en_passant = Column(String, index=True)
+    turn = Column(String, index=True)
+    white_wins = Column(Integer)
+    black_wins = Column(Integer)
+    stalemates = Column(Integer)
 
-    @staticmethod
-    def from_json(json_str, win_buckets):
-        data = json.loads(json_str)
-        win_buckets = json.loads(win_buckets)
-        return GamePositions(
-            piece_positions=data["piece_positions"],
-            castling_rights=data["castling_rights"],
-            en_passant=data["en_passant"],
-            turn=data["turn"],
-            white_wins=win_buckets["white_wins"],
-            black_wins=win_buckets["black_wins"],
-            stalemates=win_buckets["stalemates"]
+    @property
+    def get_hash(self):
+        game_string = (
+            self.piece_positions
+            + self.castling_rights
+            + self.en_passant
+            + self.turn
         )
-    
-    
-GamePositionRollup = create_dynamic_model("GamePositionRollup",sample_bitboard_dict,"rollup_position")
-TrainGamePositions = create_dynamic_model("TrainGamePositions",sample_bitboard_dict,"train_position")
-TestGamePositions = create_dynamic_model("TestGamePositions",sample_bitboard_dict,"test_position")
-ValidationGamePositions = create_dynamic_model("ValidationGamePositions",sample_bitboard_dict,"validation_position")
+        hash_object = hashlib.sha256(game_string.encode())
+        return hash_object.hexdigest()
 
+# Define a function to create standalone models without inheritance
+def create_standalone_model(class_name, attributes_dict):
+    columns = {
+        '__tablename__': class_name.lower(),
+        'id': Column(Integer, primary_key=True, autoincrement=True),
+        'fen': Column(String, index=True),
+        'piece_positions': Column(String, index=True),
+        'castling_rights': Column(String, index=True),
+        'en_passant': Column(String, index=True),
+        'turn': Column(String, index=True),
+        'white_wins': Column(Integer),
+        'black_wins': Column(Integer),
+        'stalemates': Column(Integer)
+    }
 
+    # Add any additional columns from `attributes_dict`
+    for key in attributes_dict.keys():
+        columns[key] = Column(String)
 
+    return type(class_name, (Base,WinBucketsMixin), columns)
 
+# Define dynamic models as standalone tables
+GamePositionRollup = create_standalone_model("GamePositionRollup", sample_bitboard_dict)
+TrainGamePositions = create_standalone_model("TrainGamePositions", sample_bitboard_dict)
+TestGamePositions = create_standalone_model("TestGamePositions", sample_bitboard_dict)
+ValidationGamePositions = create_standalone_model("ValidationGamePositions", sample_bitboard_dict)
