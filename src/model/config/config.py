@@ -4,9 +4,9 @@ from math import sqrt
 class Settings(BaseSettings): 
 
     BatchSize: int = 521
-    DataLoaderBatchSize: int = 128
+    DataLoaderBatchSize: int = 32
 
-    num_workers: int = 0
+    num_workers: int = 8
 
     nnGenBatchSize: int = 1
     

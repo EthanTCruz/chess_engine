@@ -30,3 +30,5 @@ runs/
 
 src/model/data/gameData.db
 src/model/data/gameData.db
+
+env/

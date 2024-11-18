@@ -59,7 +59,7 @@ if s.useSamplePgn:
 def main():
     # test_speeds()
     # pgn_to_db()
-    get_data(pgn_file)
+    # get_data(pgn_file)
     preprocess_data()
     split_game_positions_in_batches(train_pct = .6, test_pct = .2, validation_pct = 0.2)
     train_model()
@@ -82,14 +82,16 @@ def get_data(pgn_file = pgn_file,db: Session = SessionLocal()):
 def preprocess_data():
     cowsay.cow(f"Converting pgn file to sqlite db")    
     delete_all_rollup_game_positions()
-    create_rollup_table(yield_size=500,db=SessionLocal())
+    create_rollup_table(yield_size=256,db=SessionLocal())
 
 def process_data():
+    cowsay.cow(f"Splitting dataset into train, validation and test sets")  
     split_game_positions_in_batches()
 
 
 
 def train_model():
+    cowsay.cow(f"Training model")  
     model = ModelOperator()
     model.train(num_workers = 0,num_epochs=32,save_model=True)
 
