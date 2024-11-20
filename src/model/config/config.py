@@ -6,11 +6,11 @@ class Settings(BaseSettings):
     BatchSize: int = 521
     DataLoaderBatchSize: int = 32
 
-    num_workers: int = 8
+    num_workers: int = 0
 
     nnGenBatchSize: int = 1
     
-    nnBatchSize: int = 100
+    nnBatchSize: int = 64
 
     nnScalarBatchSize: int = 10
     
