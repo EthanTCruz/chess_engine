@@ -14,10 +14,9 @@ from chess_engine.src.model.classes.sqlite.database import SessionLocal
 from chess_engine.src.model.classes.sqlite.dependencies import (
     delete_all_game_positions,
     delete_all_rollup_game_positions,
-    create_rollup_table,
     find_rollup_move,
     find_board_rollup)
-from chess_engine.src.model.classes.sqlite.dataset_splitter import split_game_positions_in_batches
+from chess_engine.src.model.classes.sqlite.dataset_splitter import split_game_positions_in_batches, create_rollup_table
 from chess_engine.src.model.classes.pgn_processor import pgn_processor
 
 from chess_engine.src.model.config.config import Settings
@@ -41,7 +40,7 @@ test_size = s.nnTestSize
 
 if s.useSamplePgn:
     pgn_file=s.samplePgn
-# pgn_file=s.samplePgn
+pgn_file=s.samplePgn
 
 
 
@@ -61,8 +60,7 @@ def main():
     # pgn_to_db()
     get_data(pgn_file)
     preprocess_data()
-    split_game_positions_in_batches(train_pct = .6, test_pct = .2, validation_pct = 0.2)
-    train_model()
+    # train_model()
     # full_data_to_ml()
     # initialize_collections()
     return 0

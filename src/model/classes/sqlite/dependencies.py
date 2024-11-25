@@ -1,8 +1,5 @@
 from chess_engine.src.model.classes.sqlite.models import (GamePositions,
-                                                          GamePositionRollup,
-                                                          TrainGamePositions,
-                                                          TestGamePositions,
-                                                          ValidationGamePositions)
+                                                          GamePositionRollup)
 from chess_engine.src.model.classes.sqlite.database import SessionLocal, get_db
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import get_all_bitboards_dict
 from chess_engine.src.model.config.config import Settings
@@ -40,9 +37,7 @@ def delete_all_rollup_game_positions(db: Session = next(get_db())):
 
         # Delete all records in the GamePositions table
         db.query(GamePositionRollup).delete()
-        db.query(TrainGamePositions).delete()
-        db.query(TestGamePositions).delete()
-        db.query(ValidationGamePositions).delete()
+
 
         # Commit the changes to the database
         db.commit()

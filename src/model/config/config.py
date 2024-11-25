@@ -6,6 +6,13 @@ class Settings(BaseSettings):
     BatchSize: int = 521
     DataLoaderBatchSize: int = 32
 
+    npzDirectory: str = './src/model/data/'
+    npzTrainingDirectory: str = f"{npzDirectory}training"
+    npzTestingDirectory: str = f"{npzDirectory}testing"
+    npzValidationDirectory: str = f"{npzDirectory}validation"
+    npzBatchSize: int = 200
+    npzBatchFileSize: int = 500
+
     num_workers: int = 0
 
     nnGenBatchSize: int = 1

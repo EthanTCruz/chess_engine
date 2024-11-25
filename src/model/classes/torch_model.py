@@ -13,10 +13,7 @@ from torch.utils.tensorboard import SummaryWriter  # For TensorBoard
 from chess_engine.src.model.classes.cnn_bb_scorer import calc_shapes
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
 from chess_engine.src.model.classes.sqlite.models import (GamePositions,
-                                                          GamePositionRollup,
-                                                          TrainGamePositions,
-                                                          ValidationGamePositions,
-                                                          TestGamePositions)
+                                                          GamePositionRollup)
 
 class AlphaZeroNet(nn.Module):
     def __init__(self, n_bitboards, board_size=8):
@@ -79,9 +76,9 @@ class ModelOperator:
     def create_dataloaders(self, num_workers=0):
 
         datasets = {
-            "train": SQLAlchemyDataset(TrainGamePositions, self.batch_size),
-            "valid": SQLAlchemyDataset(ValidationGamePositions, self.batch_size),
-            "test": SQLAlchemyDataset(TestGamePositions, self.batch_size)
+            "train": SQLAlchemyDataset(GamePositionRollup, self.batch_size),
+            "valid": SQLAlchemyDataset(GamePositionRollup, self.batch_size),
+            "test": SQLAlchemyDataset(GamePositionRollup, self.batch_size)
         }
 
         for key, dataset in datasets.items():

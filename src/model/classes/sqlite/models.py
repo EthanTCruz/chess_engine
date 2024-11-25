@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import declarative_base, relationship
 import hashlib
 import json
@@ -61,7 +61,11 @@ def create_standalone_model(class_name, attributes_dict):
         'turn': Column(String, index=True),
         'white_wins': Column(Integer),
         'black_wins': Column(Integer),
-        'stalemates': Column(Integer)
+        'stalemates': Column(Integer),
+        'is_training_data': Column(Boolean),
+        'is_testing_data': Column(Boolean),
+        'is_validation_data': Column(Boolean),
+        
     }
 
     # Add any additional columns from `attributes_dict`
@@ -72,6 +76,4 @@ def create_standalone_model(class_name, attributes_dict):
 
 # Define dynamic models as standalone tables
 GamePositionRollup = create_standalone_model("GamePositionRollup", sample_bitboard_dict)
-TrainGamePositions = create_standalone_model("TrainGamePositions", sample_bitboard_dict)
-TestGamePositions = create_standalone_model("TestGamePositions", sample_bitboard_dict)
-ValidationGamePositions = create_standalone_model("ValidationGamePositions", sample_bitboard_dict)
+
