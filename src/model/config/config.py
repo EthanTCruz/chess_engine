@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     npzTrainingDirectory: str = f"{npzDirectory}training"
     npzTestingDirectory: str = f"{npzDirectory}testing"
     npzValidationDirectory: str = f"{npzDirectory}validation"
-    npzBatchSize: int = 200
-    npzBatchFileSize: int = 500
+    npzBatchSize: int = 512
+    npzBatchFileSize: int = 128
 
     num_workers: int = 0
 

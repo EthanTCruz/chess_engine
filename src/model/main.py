@@ -16,17 +16,16 @@ from chess_engine.src.model.classes.sqlite.dependencies import (
     delete_all_rollup_game_positions,
     find_rollup_move,
     find_board_rollup)
-from chess_engine.src.model.classes.sqlite.dataset_splitter import split_game_positions_in_batches, create_rollup_table
+from chess_engine.src.model.classes.sqlite.dataset_splitter import  create_rollup_table
 from chess_engine.src.model.classes.pgn_processor import pgn_processor
 
 from chess_engine.src.model.config.config import Settings
 
 from chess_engine.src.model.classes.endgame import endgamePicker
-from chess_engine.src.model.classes.mongo_functions import mongo_data_pipe
 from chess_engine.src.model.classes.torch_model import ModelOperator
 from chess_engine.src.model.classes.bitboard_processing.board_analyzer import board_analyzer
-from chess_engine.src.model.classes.move_picker import move_picker
 
+from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
 
 s = Settings()
 ModelFilePath=s.ModelFilePath
@@ -58,9 +57,10 @@ pgn_file=s.samplePgn
 def main():
     # test_speeds()
     # pgn_to_db()
-    get_data(pgn_file)
-    preprocess_data()
-    # train_model()
+    # get_data(pgn_file)
+    # preprocess_data()
+    process_data()
+    train_model()
     # full_data_to_ml()
     # initialize_collections()
     return 0
@@ -82,9 +82,10 @@ def preprocess_data():
     delete_all_rollup_game_positions()
     create_rollup_table(yield_size=256,db=SessionLocal())
 
+
 def process_data():
     cowsay.cow(f"Splitting dataset into train, validation and test sets")  
-    split_game_positions_in_batches()
+    db_to_npz_files()
 
 
 
