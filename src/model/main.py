@@ -57,8 +57,8 @@ pgn_file=s.samplePgn
 def main():
     # test_speeds()
     # pgn_to_db()
-    # get_data(pgn_file)
-    # preprocess_data()
+    get_data(pgn_file)
+    preprocess_data()
     process_data()
     train_model()
     # full_data_to_ml()
@@ -92,7 +92,7 @@ def process_data():
 def train_model():
     cowsay.cow(f"Training model")  
     model = ModelOperator()
-    model.train(num_workers = 0,num_epochs=32,save_model=True)
+    model.train(num_workers = 0,num_epochs=1,save_model=True)
 
 
 def full_data_to_ml():
