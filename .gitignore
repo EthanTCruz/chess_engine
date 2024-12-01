@@ -32,6 +32,6 @@ src/model/data/gameData.db
 src/model/data/gameData.db
 
 env/
-src/model/data/validation/
-src/model/data/training/
-src/model/data/testing/
+src/model/data/validation/*
+src/model/data/training/*
+src/model/data/testing/*
