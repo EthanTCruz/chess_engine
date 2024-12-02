@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
-from chess_engine.src.model.config.config import Settings, settings
+from chess_engine.src.model.config.config import  model_settings, data_settings
 from tqdm import tqdm
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter  # For TensorBoard
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
-from chess_engine.src.model.classes.sqlite.models import (GamePositions, GamePositionRollup)
+
 
 # Redefine NpzDataset to output labels as class indices
 class NpzDataset(Dataset):
@@ -104,7 +104,7 @@ class NpzDataset(Dataset):
 
 # Define the AlphaZeroNet model
 class AlphaZeroNet(nn.Module):
-    def __init__(self, n_bitboards, board_size=8):
+    def __init__(self, n_bitboards=len(sample_bitboard_dict.keys()), board_size=8):
         super(AlphaZeroNet, self).__init__()
         
         # Input layer: number of channels equals n_bitboards
@@ -156,15 +156,15 @@ class AlphaZeroNet(nn.Module):
 # Define the ModelOperator class
 class ModelOperator:
     def __init__(self):
-        self.batch_size = settings.DataLoaderBatchSize
-        self.num_workers = settings.num_workers
-        self.model_path = settings.torch_model_file
+        self.batch_size = model_settings.DataLoaderBatchSize
+        self.num_workers = model_settings.num_workers
+        self.model_path = model_settings.torch_model_file
 
     def create_dataloaders(self, num_workers=0):
         datasets = {
-            "train": NpzDataset(settings.npzTrainingDirectory),
-            "valid": NpzDataset(settings.npzValidationDirectory),
-            "test": NpzDataset(settings.npzTestingDirectory)
+            "train": NpzDataset(data_settings.npzTrainingDirectory),
+            "valid": NpzDataset(data_settings.npzValidationDirectory),
+            "test": NpzDataset(data_settings.npzTestingDirectory)
         }
 
         for key, dataset in datasets.items():
@@ -181,7 +181,7 @@ class ModelOperator:
         dataloaders = self.create_dataloaders(num_workers)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = AlphaZeroNet(n_bitboards=12).to(device)  # Assuming 12 bitboards
+        model = AlphaZeroNet().to(device)  # Assuming 12 bitboards
 
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()

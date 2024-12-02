@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import bitboards_to_array, sample_bitboard_dict
 from chess_engine.src.model.classes.sqlite.database import  get_db
-from chess_engine.src.model.config.config import settings
+from chess_engine.src.model.config.config import data_settings
 import os
 
 def delete_all_files(directory):
@@ -27,11 +27,11 @@ def delete_all_files(directory):
 
 def db_to_npz_files():
 
-    batch_file_size = settings.npzBatchFileSize  # Number of examples per file
+    batch_file_size = data_settings.BatchFileSize  # Number of examples per file
     
-    sets = {settings.npzTrainingDirectory:GamePositionRollup.is_training_data.is_(True),
-            settings.npzTestingDirectory:GamePositionRollup.is_testing_data.is_(True),
-            settings.npzValidationDirectory: GamePositionRollup.is_validation_data.is_(True)}
+    sets = {data_settings.TrainingDirectory:GamePositionRollup.is_training_data.is_(True),
+            data_settings.TestingDirectory:GamePositionRollup.is_testing_data.is_(True),
+            data_settings.ValidationDirectory: GamePositionRollup.is_validation_data.is_(True)}
 
     
     for npz_dir, filter_conditions in sets.items():

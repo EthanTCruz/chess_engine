@@ -1,19 +1,18 @@
 from pydantic_settings import BaseSettings
-from math import sqrt
+
+
+
+
 
 class Settings(BaseSettings): 
 
     BatchSize: int = 521
-    DataLoaderBatchSize: int = 32
+    
 
-    npzDirectory: str = './src/model/data/'
-    npzTrainingDirectory: str = f"{npzDirectory}training"
-    npzTestingDirectory: str = f"{npzDirectory}testing"
-    npzValidationDirectory: str = f"{npzDirectory}validation"
-    npzBatchSize: int = 512
-    npzBatchFileSize: int = 128
 
-    num_workers: int = 0
+
+
+    
 
     nnGenBatchSize: int = 1
     
@@ -53,7 +52,7 @@ class Settings(BaseSettings):
 
 
 
-    GOOGLE_APPLICATION_CREDENTIALS: str = "C:\\Users\\ethan\\git\\Full_Chess_App\\Chess_Model\\terraform\\secret.json"
+    GOOGLE_APPLICATION_CREDENTIALS: str = "C:\\Users\\ethan\\git\\Full_Chess_App\\chess_engine\\terraform\\secret.json"
     BUCKET_NAME: str = "chess-model-weights"
     matrixScalerFile: str = f"{srcModelDirectory}/data/matrixScaler.joblib"
 
@@ -72,7 +71,7 @@ class Settings(BaseSettings):
     np_means_file: str = f"{data_dir}/means.npy"
     np_stds_file: str = f"{data_dir}/stds.npy"
 
-    torch_model_file: str = f"{srcModelDirectory}/chess_model/torch_model.pth"
+
 
     mongo_host: str = "10.1.135.1"
     # mongo_port: str = '27017'
@@ -104,3 +103,23 @@ class Settings(BaseSettings):
         env_file = '.conf-env'
 
 settings = Settings()
+
+class ModelSettings(BaseSettings):
+    DataLoaderBatchSize: int = 32
+    num_workers: int = 0
+    torch_model_file: str = f"{settings.srcModelDirectory}/chess_model/torch_model.pth"
+    
+
+model_settings = ModelSettings()
+
+class DataLoaderSettings(BaseSettings):
+    MaxCacheSize: int = 5
+    BatchSize: int = 128
+    BatchFileSize: int = 10000
+
+    DataDirectory: str = './src/model/data/'
+    TrainingDirectory: str = f"{DataDirectory}training"
+    TestingDirectory: str = f"{DataDirectory}testing"
+    ValidationDirectory: str = f"{DataDirectory}validation"
+
+data_settings = DataLoaderSettings()

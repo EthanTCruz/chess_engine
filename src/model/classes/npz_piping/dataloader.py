@@ -3,10 +3,11 @@ import bisect
 import torch
 from torch.utils.data import Dataset
 import numpy as np
+from chess_engine.src.model.config.config import  dl_settings
 
 # Define the NpzDataset class
 class NpzDataset(Dataset):
-    def __init__(self, data_directory, transform=None, target_transform=None):
+    def __init__(self, data_directory, max_cache_size = dl_settings.MaxCacheSize , transform=None, target_transform=None):
         """
         Custom Dataset for loading data from multiple .npz files.
 
@@ -25,7 +26,7 @@ class NpzDataset(Dataset):
         self.file_sample_counts = []
         self.cumulative_counts = [0]  # Start with 0 to correctly index the first file
         self.file_cache = {}
-        self.max_cache_size = 5  # Adjust based on available memory
+        self.max_cache_size = max_cache_size # Adjust based on available memory
         
         total_samples = 0
         for file_name in sorted(os.listdir(data_directory)):
