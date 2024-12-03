@@ -19,27 +19,24 @@ from chess_engine.src.model.classes.sqlite.dependencies import (
 from chess_engine.src.model.classes.sqlite.dataset_splitter import  create_rollup_table
 from chess_engine.src.model.classes.pgn_processor import pgn_processor
 
-from chess_engine.src.model.config.config import Settings
+from chess_engine.src.model.config.config import settings, model_settings
 
 from chess_engine.src.model.classes.endgame import endgamePicker
 from chess_engine.src.model.classes.torch_model import ModelOperator
-from chess_engine.src.model.classes.bitboard_processing.board_analyzer import board_analyzer
 
 from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
 
-s = Settings()
-ModelFilePath=s.ModelFilePath
-ModelFilename=s.ModelFilename
 
-pgn_file = s.pgn_file
 
-epochs = s.nnEpochs
-batch_size = s.nnBatchSize
-test_size = s.nnTestSize
 
-if s.useSamplePgn:
-    pgn_file=s.samplePgn
-pgn_file=s.samplePgn
+pgn_file = settings.pgn_file
+
+epochs = model_settings.Epochs
+
+
+if settings.useSamplePgn:
+    pgn_file=settings.samplePgn
+pgn_file=settings.samplePgn
 
 
 

@@ -4,9 +4,8 @@ from chess_engine.src.model.classes.sqlite.models import (GamePositions,
                                                           GamePositionRollup)
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from sqlalchemy.orm import load_only
 import random
-from chess_engine.src.model.config.config import settings
+from chess_engine.src.model.config.config import model_settings
 from chess_engine.src.model.classes.sqlite.models import (GamePositions,
                                                           GamePositionRollup)
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import get_all_bitboards_dict
@@ -17,9 +16,9 @@ from tqdm import tqdm
 
 def create_rollup_table(
     yield_size: int = 200,
-    train_pct: float = settings.nnTrainSize,
-    test_pct: float = settings.nnTestSize,
-    validation_pct: float = settings.nnValidationSize,
+    train_pct: float = model_settings.TrainSize,
+    test_pct: float = model_settings.TestSize,
+    validation_pct: float = model_settings.ValidationSize,
     db: Session = next(get_db())
 ):
     try:

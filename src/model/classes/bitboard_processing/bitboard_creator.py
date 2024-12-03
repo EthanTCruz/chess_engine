@@ -1,7 +1,6 @@
 import chess
 import numpy as np
-from math import ceil
-from chess_engine.src.model.config.config import settings
+
 
 
 

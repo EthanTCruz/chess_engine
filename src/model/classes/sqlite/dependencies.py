@@ -2,7 +2,6 @@ from chess_engine.src.model.classes.sqlite.models import (GamePositions,
                                                           GamePositionRollup)
 from chess_engine.src.model.classes.sqlite.database import SessionLocal, get_db
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import get_all_bitboards_dict
-from chess_engine.src.model.config.config import Settings
 from sqlalchemy.orm import Session
 from typing import List, Tuple
 from sqlalchemy import or_, and_, func
@@ -13,7 +12,7 @@ import numpy as np
 import json 
 from tqdm import tqdm
 
-n_half_moves = Settings().halfMoveBin
+
 
 
 
@@ -110,8 +109,8 @@ def board_to_GamePostition(board: chess.Board,victor: str = "NA"):
     turn = fen_components[1]
     castling_rights = fen_components[2]
     en_passant = fen_components[3]
-    half_move_clock = int(fen_components[4])
-    half_move_bin =  1 if half_move_clock >= n_half_moves else  0
+
+
 
     white_wins = 0
     black_wins = 0
@@ -144,8 +143,7 @@ def board_to_GamePostitionRollup(board: chess.Board):
     turn = fen_components[1]
     castling_rights = fen_components[2]
     en_passant = fen_components[3]
-    half_move_clock = int(fen_components[4])
-    half_move_bin =  1 if half_move_clock >= n_half_moves else  0
+
 
     white_wins = 0
     black_wins = 0
