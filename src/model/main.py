@@ -36,7 +36,7 @@ epochs = model_settings.Epochs
 
 if settings.useSamplePgn:
     pgn_file=settings.samplePgn
-pgn_file=settings.samplePgn
+# pgn_file=settings.samplePgn
 
 
 
@@ -89,7 +89,7 @@ def process_data():
 def train_model():
     cowsay.cow(f"Training model")  
     model = ModelOperator()
-    model.train(num_workers = 0,num_epochs=1,save_model=True)
+    model.train(num_workers = 0,num_epochs=epochs,save_model=True)
 
 
 def full_data_to_ml():
