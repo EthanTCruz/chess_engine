@@ -54,9 +54,9 @@ if settings.useSamplePgn:
 def main():
     # test_speeds()
     # pgn_to_db()
-    get_data(pgn_file)
-    preprocess_data()
-    process_data()
+    # get_data(pgn_file)
+    # preprocess_data()
+    # process_data()
     train_model()
     # full_data_to_ml()
     # initialize_collections()
