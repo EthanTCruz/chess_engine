@@ -1,9 +1,8 @@
-import os
-import bisect
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import  DataLoader
 from chess_engine.src.model.config.config import  model_settings, data_settings
 from tqdm import tqdm
 import torch.optim as optim

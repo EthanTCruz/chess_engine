@@ -7,27 +7,20 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings): 
 
     BatchSize: int = 521
+
+    database_url: str = "sqlite:///src/model/data/gameData.db"
+
     srcModelDirectory: str = './src/model'
-
     pgn_file: str = f"{srcModelDirectory}/pgn/full_dataset/"
-
     samplePgn: str = f"{srcModelDirectory}/pgn/sample_dataset/"
-
     nnLogDir: str = "./chess_engine/logs/"
 
-
-
-    #should run under assumption score depth will always be greater than mate depth
     score_depth: int = 1
     player: str = 'w'
     endgame_table: str = f"{srcModelDirectory}/data/EndgameTbl/"
     minimumEndgamePieces: int = 5
 
-
-    #MCST parameters:
     UCB_Constant: float = 0.1
-
-
 
     GOOGLE_APPLICATION_CREDENTIALS: str = "C:\\Users\\ethan\\git\\Full_Chess_App\\chess_engine\\terraform\\secret.json"
     BUCKET_NAME: str = "chess-model-weights"
@@ -70,7 +63,7 @@ model_settings = ModelSettings()
 class DataLoaderSettings(BaseSettings):
     MaxCacheSize: int = 5
     BatchSize: int = 128
-    BatchFileSize: int = 10000
+    BatchFileSize: int = 1000000
 
     DataDirectory: str = './src/model/data/'
     TrainingDirectory: str = f"{DataDirectory}training"
