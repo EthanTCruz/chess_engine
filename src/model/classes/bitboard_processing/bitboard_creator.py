@@ -31,6 +31,8 @@ class Bitboard_Creator:
         results_dict.update(base_dict)
 
         return results_dict
+    
+
 
     def get_numpy_bitboards(self,board):
         bitboards = self.get_all_bitboards(board=board)

@@ -24,7 +24,8 @@ from chess_engine.src.model.config.config import settings, model_settings
 from chess_engine.src.model.classes.endgame import endgamePicker
 from chess_engine.src.model.classes.torch_model import ModelOperator
 
-from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
+# from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
+from chess_engine.src.model.classes.h5py_piping.create_h5_files import db_to_hdf5_files
 
 
 
@@ -36,7 +37,7 @@ epochs = model_settings.Epochs
 
 if settings.useSamplePgn:
     pgn_file=settings.samplePgn
-# pgn_file=settings.samplePgn
+pgn_file=settings.samplePgn
 
 
 
@@ -54,10 +55,10 @@ if settings.useSamplePgn:
 def main():
     # test_speeds()
     # pgn_to_db()
-    # get_data(pgn_file)
-    # preprocess_data()
-    # process_data()
-    train_model()
+    get_data(pgn_file)
+    preprocess_data()
+    process_data()
+    # train_model()
     # full_data_to_ml()
     # initialize_collections()
     return 0
@@ -82,7 +83,7 @@ def preprocess_data():
 
 def process_data():
     cowsay.cow(f"Splitting dataset into train, validation and test sets")  
-    db_to_npz_files()
+    db_to_hdf5_files()
 
 
 
