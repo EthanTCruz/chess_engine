@@ -15,7 +15,8 @@ from tqdm import tqdm
 
 
 def create_rollup_table(
-    yield_size: int = 200,
+    yield_size: int = 2048,
+    batch_size: int = 2048,  # Define the batch size for commits
     train_pct: float = model_settings.TrainSize,
     test_pct: float = model_settings.TestSize,
     validation_pct: float = model_settings.ValidationSize,
@@ -45,9 +46,10 @@ def create_rollup_table(
         # Get the total count of rows
         total_count = query.count()
 
-        # Yield results in batches with tqdm progress bar
+        # Initialize batch and process records
+        batch = []
         gen = query.yield_per(yield_size)
-        for result in tqdm(gen, total=total_count, desc="Processing GamePositions"):
+        for idx, result in enumerate(tqdm(gen, total=total_count, desc="Processing GamePositions")):
             fen = f"{result.piece_positions} {result.turn} {result.castling_rights} {result.en_passant} 0 1"
             board = chess.Board(fen)
             results_dict = get_all_bitboards_dict(board=board)
@@ -73,9 +75,19 @@ def create_rollup_table(
                 is_testing_data=is_testing_data,
                 is_validation_data=is_validation_data
             )
-            db.add(game)
+            batch.append(game)
 
-        db.commit()
+            # Commit the batch if it reaches the batch size
+            if len(batch) >= batch_size:
+                db.bulk_save_objects(batch)
+                db.commit()
+                batch.clear()
+
+        # Commit any remaining records
+        if batch:
+            db.bulk_save_objects(batch)
+            db.commit()
+
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
