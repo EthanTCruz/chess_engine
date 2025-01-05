@@ -56,6 +56,7 @@ class ModelSettings(BaseSettings):
     TrainSize: float = 1.0 - TestSize - ValidationSize
 
     DataLoaderBatchSize: int = 512
+    # Will only work as 0 while on windows
     num_workers: int = 0
     torch_model_file: str = f"{settings.srcModelDirectory}/chess_model/torch_model.pth"
     

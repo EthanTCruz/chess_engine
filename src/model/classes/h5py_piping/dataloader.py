@@ -2,21 +2,19 @@ import os
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from chess_engine.src.model.config.config import data_settings
+from chess_engine.src.model.config.config import data_settings, model_settings
 import h5py
 import time
 
 # Global dictionary {worker_id: h5_file_object}
 _worker_h5_handles = {}
 
-def worker_init_fn(worker_id):
+def worker_init_fn(worker_id, h5_path):
     global _worker_h5_handles
-    h5_file_path = getattr(torch.utils.data.get_worker_info().dataset, 'h5_path', None)
-    print(f"Initializing worker {worker_id} with HDF5 file path: {h5_file_path}")
-    if h5_file_path is not None:
-        _worker_h5_handles[worker_id] = h5py.File(h5_file_path, 'r', libver='latest', swmr=True)
+    print(f"Initializing worker {worker_id} with HDF5 file path: {h5_path}")
+    if h5_path:
+        _worker_h5_handles[worker_id] = h5py.File(h5_path, 'r', libver='latest', swmr=True)
         print(f"Worker {worker_id} initialized successfully.")
-
 
 
 class HDF5SingleFileDataset(Dataset):
@@ -33,11 +31,13 @@ class HDF5SingleFileDataset(Dataset):
         """
         super().__init__()
         self.h5_file_path = f"{h5_path}/data_all.h5"
+        assert os.path.exists(self.h5_file_path), f"HDF5 file not found at {self.h5_file_path}"
         self.transform = transform
 
-        # Open once to get length (and optionally shape info)
         with h5py.File(self.h5_file_path, 'r', libver='latest', swmr=True) as h5f:
-            self.length = h5f['features'].shape[0]  # number of samples
+            self.length = h5f['features'].shape[0]
+
+
 
     def __len__(self):
         return self.length
@@ -46,16 +46,16 @@ class HDF5SingleFileDataset(Dataset):
         # Retrieve the worker ID
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is None:
-            # Single-process data loading (no workers)
             with h5py.File(self.h5_file_path, 'r') as hf:
                 features = hf["features"][idx]
-                labels   = hf["labels"][idx]
+                labels = hf["labels"][idx]
         else:
-            # Use the open file handle stored for this worker
             worker_id = worker_info.id
+            if worker_id not in _worker_h5_handles:
+                raise KeyError(f"Worker {worker_id} does not have an HDF5 handle. Available: {_worker_h5_handles.keys()}")
             hf = _worker_h5_handles[worker_id]
             features = hf["features"][idx]
-            labels   = hf["labels"][idx]
+            labels = hf["labels"][idx]
 
         # Apply any transform you want to the features
         if self.transform:
@@ -66,21 +66,22 @@ class HDF5SingleFileDataset(Dataset):
         labels_tensor   = torch.from_numpy(labels)     # shape: (3,)
 
         return features_tensor, labels_tensor
-    
-def get_dataloader(h5_path, batch_size=32,shuffle=True, num_workers=4):
+
+def get_dataloader(h5_path, batch_size=32, shuffle=True, num_workers=4):
     dataset = HDF5SingleFileDataset(h5_path)
     loader = DataLoader(
         dataset,
         batch_size=batch_size,
         num_workers=num_workers,
-        worker_init_fn=worker_init_fn,
+        worker_init_fn=lambda worker_id: worker_init_fn(worker_id, dataset.h5_file_path),
         shuffle=shuffle
     )
     return loader
 
+
 def get_dataloader_full_retrieval_time():
     num_epochs = 1
-    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=2)
+    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=model_settings.num_workers)
     start = time.time()
     i = 0
     for epoch in range(num_epochs):
