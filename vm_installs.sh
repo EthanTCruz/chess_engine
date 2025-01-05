@@ -6,7 +6,5 @@ export useSamplePgn=False
 export trainModel=True
 git clone https://github.com/EthanTCruz/chess_engine.git
 cd chess_engine
-
 pip install -r pi_requirements.txt
-cd ../
 tmux new -s train

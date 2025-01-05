@@ -64,9 +64,9 @@ model_settings = ModelSettings()
 
 class DataLoaderSettings(BaseSettings):
     MaxCacheSize: int = 5
-    BatchSize: int = 512
+    BatchSize: int = 5096
     BatchFileSize: int = 10000000
-    ChunkSize: int = 64
+    ChunkSize: int = 1
 
     DataDirectory: str = './src/model/data/'
     TrainingDirectory: str = f"{DataDirectory}training"

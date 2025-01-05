@@ -1,66 +1,97 @@
 import os
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import numpy as np
 from chess_engine.src.model.config.config import data_settings
+import h5py
+import time
 
-# Define the NpzDataset class
-class NpzDataset(Dataset):
-    def __init__(self, data_directory, transform=None, target_transform=None):
+# Global dictionary {worker_id: h5_file_object}
+_worker_h5_handles = {}
+
+def worker_init_fn(worker_id):
+    global _worker_h5_handles
+    h5_file_path = getattr(torch.utils.data.get_worker_info().dataset, 'h5_path', None)
+    print(f"Initializing worker {worker_id} with HDF5 file path: {h5_file_path}")
+    if h5_file_path is not None:
+        _worker_h5_handles[worker_id] = h5py.File(h5_file_path, 'r', libver='latest', swmr=True)
+        print(f"Worker {worker_id} initialized successfully.")
+
+
+
+class HDF5SingleFileDataset(Dataset):
+    """
+    A Dataset that reads from one chunked HDF5 file with datasets:
+      - "features" of shape (N, num_bitboards, 8, 8)
+      - "labels" of shape (N, 3)
+    """
+    def __init__(self, h5_path, transform=None):
         """
-        Custom Dataset for loading data from multiple .npz files into memory.
-
         Args:
-            data_directory (str): Directory containing the .npz files.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
-            target_transform (callable, optional): Optional transform to be applied
-                on the target.
+            h5_file_path (str): Path to the .h5 file ('data_all.h5').
+            transform (callable, optional): A transform to apply to the features.
         """
-        self.data_directory = data_directory
+        super().__init__()
+        self.h5_file_path = f"{h5_path}/data_all.h5"
         self.transform = transform
-        self.target_transform = target_transform
 
-        self.data = []  # Preload all data here
-        self.labels = []  # Preload all labels here
-
-        # Load all .npz files into memory
-        for file_name in sorted(os.listdir(data_directory)):
-            if file_name.endswith('.npz'):
-                file_path = os.path.join(data_directory, file_name)
-                with np.load(file_path) as data:
-                    self.data.append(data['features'])
-                    self.labels.append(data['labels'])
-
-        # Concatenate all data and labels to simplify indexing
-        self.data = np.concatenate(self.data, axis=0)
-        self.labels = np.concatenate(self.labels, axis=0)
-
-        # Total samples
-        self.total_samples = self.data.shape[0]
+        # Open once to get length (and optionally shape info)
+        with h5py.File(self.h5_file_path, 'r', libver='latest', swmr=True) as h5f:
+            self.length = h5f['features'].shape[0]  # number of samples
 
     def __len__(self):
-        return self.total_samples
+        return self.length
 
     def __getitem__(self, idx):
-        if idx < 0 or idx >= self.total_samples:
-            raise IndexError(f"Index {idx} out of bounds for dataset of size {self.total_samples}")
+        # Retrieve the worker ID
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is None:
+            # Single-process data loading (no workers)
+            with h5py.File(self.h5_file_path, 'r') as hf:
+                features = hf["features"][idx]
+                labels   = hf["labels"][idx]
+        else:
+            # Use the open file handle stored for this worker
+            worker_id = worker_info.id
+            hf = _worker_h5_handles[worker_id]
+            features = hf["features"][idx]
+            labels   = hf["labels"][idx]
 
-        feature_sample = self.data[idx]
-        label_sample = self.labels[idx]
-
-        # Convert features to tensor
+        # Apply any transform you want to the features
         if self.transform:
-            feature_sample = self.transform(feature_sample)
-        else:
-            feature_sample = torch.from_numpy(feature_sample).float()
+            features = self.transform(features)  # for example, normalization, etc.
 
-        # Convert labels from one-hot encoding to class indices
-        if self.target_transform:
-            label_sample = self.target_transform(label_sample)
-        else:
-            # label_sample is one-hot encoded, convert to class index
-            label_sample = torch.from_numpy(label_sample).long()
-            label_sample = torch.argmax(label_sample)
+        # Convert to torch tensors
+        features_tensor = torch.from_numpy(features)   # shape: (num_bitboards, 8, 8)
+        labels_tensor   = torch.from_numpy(labels)     # shape: (3,)
 
-        return feature_sample, label_sample
+        return features_tensor, labels_tensor
+    
+def get_dataloader(h5_path, batch_size=32,shuffle=True, num_workers=4):
+    dataset = HDF5SingleFileDataset(h5_path)
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        worker_init_fn=worker_init_fn,
+        shuffle=shuffle
+    )
+    return loader
+
+def get_dataloader_full_retrieval_time():
+    num_epochs = 1
+    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=2)
+    start = time.time()
+    i = 0
+    for epoch in range(num_epochs):
+        for features, labels in train_loader:
+            i = i + features.shape[0]
+            # print(f"feature shape: {features.shape}, labels shape: {labels.shape}")
+            pass
+            # features => shape (64, 12, 8, 8)
+            # labels   => shape (64, 3)
+            # your training logic here...
+    end = time.time()
+    elapsed_time = end - start
+    print(f"total run time: {elapsed_time}, training examples: {i}")
+    return elapsed_time

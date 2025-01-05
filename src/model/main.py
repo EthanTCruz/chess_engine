@@ -26,6 +26,7 @@ from chess_engine.src.model.classes.torch_model import ModelOperator
 
 # from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
 from chess_engine.src.model.classes.h5py_piping.create_h5_files import db_to_hdf5_files
+from chess_engine.src.model.classes.h5py_piping.dataloader import get_dataloader_full_retrieval_time
 
 
 
@@ -37,7 +38,7 @@ epochs = model_settings.Epochs
 
 if settings.useSamplePgn:
     pgn_file=settings.samplePgn
-# pgn_file=settings.samplePgn
+pgn_file=settings.samplePgn
 
 
 
@@ -58,6 +59,7 @@ def main():
     get_data(pgn_file)
     preprocess_data()
     process_data()
+    test_dataloader()
     # train_model()
     # full_data_to_ml()
     # initialize_collections()
@@ -85,6 +87,9 @@ def process_data():
     cowsay.cow(f"Splitting dataset into train, validation and test sets")  
     db_to_hdf5_files()
 
+
+def test_dataloader():
+    get_dataloader_full_retrieval_time()
 
 
 def train_model():
