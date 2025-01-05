@@ -1,4 +1,5 @@
-
+import sys
+sys.path.append("../")
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -11,61 +12,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter  # For TensorBoard
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
-from chess_engine.src.model.classes.npz_piping.dataloader import NpzDataset
+from chess_engine.src.model.classes.h5py_piping.dataloader import get_dataloader, HDF5SingleFileDataset
+from chess_engine.src.model.classes.basic_model import ChessEvalCNN
+from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
 
 
 
-
-# Define the AlphaZeroNet model
-class AlphaZeroNet(nn.Module):
-    def __init__(self, n_bitboards=len(sample_bitboard_dict.keys()), board_size=8):
-        super(AlphaZeroNet, self).__init__()
-        
-        # Input layer: number of channels equals n_bitboards
-        self.conv1 = nn.Conv2d(n_bitboards, 256, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
-        
-        # Batch normalization layers for each convolution layer
-        self.bn1 = nn.BatchNorm2d(256)
-        self.bn2 = nn.BatchNorm2d(256)
-        self.bn3 = nn.BatchNorm2d(256)
-        self.bn4 = nn.BatchNorm2d(256)
-        
-        # Policy head
-        self.policy_conv = nn.Conv2d(256, 2, kernel_size=1)  # 2 channels for the policy output
-        self.policy_bn = nn.BatchNorm2d(2)
-        self.policy_fc = nn.Linear(2 * board_size * board_size, board_size * board_size)
-        
-        # Value head
-        self.value_conv = nn.Conv2d(256, 1, kernel_size=1)   # 1 channel for the value output
-        self.value_bn = nn.BatchNorm2d(1)
-        self.value_fc1 = nn.Linear(board_size * board_size, 256)
-        self.value_fc2 = nn.Linear(256, 3)  # 3 outputs for white win, black win, draw
-
-    def forward(self, x):
-        # Convolutional layers with ReLU and batch normalization
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = F.relu(self.bn4(self.conv4(x)))
-        
-        # Policy head
-        policy = F.relu(self.policy_bn(self.policy_conv(x)))
-        policy = policy.view(policy.size(0), -1)  # Flatten
-        policy = self.policy_fc(policy)
-        policy = F.log_softmax(policy, dim=1)  # Log softmax for policy distribution
-        
-        # Value head
-        value = F.relu(self.value_bn(self.value_conv(x)))
-        value = value.view(value.size(0), -1)  # Flatten
-        value = F.relu(self.value_fc1(value))
-        value = self.value_fc2(value)
-        # Remove log_softmax here, CrossEntropyLoss expects raw logits
-        # value = F.log_softmax(value, dim=1)  # Removed
-        
-        return policy, value
+model_settings.num_workers = 8
 
 # Define the ModelOperator class
 class ModelOperator:
@@ -75,27 +28,20 @@ class ModelOperator:
         self.model_path = model_settings.torch_model_file
 
     def create_dataloaders(self, num_workers=0):
-        datasets = {
-            "train": NpzDataset(data_settings.TrainingDirectory),
-            "valid": NpzDataset(data_settings.ValidationDirectory),
-            "test": NpzDataset(data_settings.TestingDirectory)
+        dataloaders = {
+            "train": get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=model_settings.num_workers),
+            "valid": get_dataloader(data_settings.ValidationDirectory,batch_size=64, shuffle=True, num_workers=model_settings.num_workers),
+            "test": get_dataloader(data_settings.TestingDirectory, batch_size=64, shuffle=True, num_workers=model_settings.num_workers)
         }
 
-        for key, dataset in datasets.items():
-            if len(dataset) == 0:
-                raise ValueError(f"{key.capitalize()} dataset is empty. Please check the data loading process.")
-
-        return {
-            key: DataLoader(dataset, batch_size=self.batch_size, shuffle=(key=="train"), num_workers=num_workers)
-            for key, dataset in datasets.items()
-        }
+        return dataloaders
 
     def train(self, learning_rate=0.001, num_epochs=16, num_workers=0, save_model=True):
         num_workers = max(num_workers, self.num_workers)
         dataloaders = self.create_dataloaders(num_workers)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = AlphaZeroNet().to(device)  # Assuming 12 bitboards
+        model = ChessEvalCNN(in_channels=len(sample_bitboard_dict)).to(device)  # Assuming 12 bitboards
 
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()
@@ -133,7 +79,7 @@ class ModelOperator:
                     optimizer.zero_grad()
 
                 # Unpack policy and value outputs
-                policy_output, value_output = model(batch_x1)
+                value_output = model(batch_x1)
                 
                 # Compute loss only on the value output
                 loss = criterion(value_output, batch_labels)
@@ -143,6 +89,9 @@ class ModelOperator:
                     optimizer.step()
 
                 running_loss += loss.item() * batch_x1.size(0)
+                # print(f"value_output: {value_output.shape}")
+                # print(f"batch_labels: {batch_labels.shape}")
+                batch_labels = batch_labels.argmax(dim=1)
                 correct += self.calculate_accuracy(value_output, batch_labels)
                 total += batch_labels.size(0)
 
@@ -170,7 +119,7 @@ class ModelOperator:
 
     def load_model(self, model_path):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = AlphaZeroNet(n_bitboards=12).to(device)  # Assuming 12 bitboards
+        self.model = ChessEvalCNN(in_channels=len(sample_bitboard_dict)).to(device)  # Assuming 12 bitboards
         self.optimizer = optim.Adam(self.model.parameters())
 
         checkpoint = torch.load(model_path, map_location=device)
@@ -191,6 +140,8 @@ class ModelOperator:
         _, predicted = torch.max(outputs, 1)
         # Labels are class indices, no need to apply torch.max
         return (predicted == labels).sum().item()
+
+
 
 # Example usage
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ import os
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from chess_engine.src.model.config.config import data_settings, model_settings
+from chess_engine.src.model.config.config import data_settings
 import h5py
 import time
 
@@ -62,8 +62,8 @@ class HDF5SingleFileDataset(Dataset):
             features = self.transform(features)  # for example, normalization, etc.
 
         # Convert to torch tensors
-        features_tensor = torch.from_numpy(features)   # shape: (num_bitboards, 8, 8)
-        labels_tensor   = torch.from_numpy(labels)     # shape: (3,)
+        features_tensor = torch.from_numpy(features).float()   # shape: (num_bitboards, 8, 8)
+        labels_tensor   = torch.from_numpy(labels).float()     # shape: (3,)
 
         return features_tensor, labels_tensor
 
@@ -81,7 +81,7 @@ def get_dataloader(h5_path, batch_size=32, shuffle=True, num_workers=4):
 
 def get_dataloader_full_retrieval_time():
     num_epochs = 1
-    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=model_settings.num_workers)
+    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=4)
     start = time.time()
     i = 0
     for epoch in range(num_epochs):

@@ -72,7 +72,7 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                 "labels",
                 shape=(0, 3),
                 maxshape=(None, 3),
-                dtype="uint64",
+                dtype="float32",
                 chunks=(chunk_size, 3),
                 compression="gzip"
             )
