@@ -9,8 +9,8 @@ Base = declarative_base()
 
 class WinBucketsMixin:
     white_wins = Column(Integer, default=0)
-    black_wins = Column(Integer, default=0)
     stalemates = Column(Integer, default=0)
+    black_wins = Column(Integer, default=0)
 
     @property
     def total_wins(self):
@@ -21,9 +21,9 @@ class WinBucketsMixin:
         total_wins = self.total_wins
         if total_wins > 0:
             mean_w = self.white_wins / total_wins
-            mean_b = self.black_wins / total_wins
             mean_s = self.stalemates / total_wins
-            return [mean_w, mean_b, mean_s]
+            mean_b = self.black_wins / total_wins
+            return [mean_w,  mean_s, mean_b]
         else:
             return [0, 0, 0]
         

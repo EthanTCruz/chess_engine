@@ -18,7 +18,6 @@ from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import 
 
 
 
-model_settings.num_workers = 8
 
 # Define the ModelOperator class
 class ModelOperator:
@@ -29,14 +28,14 @@ class ModelOperator:
 
     def create_dataloaders(self, num_workers=0):
         dataloaders = {
-            "train": get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=model_settings.num_workers),
-            "valid": get_dataloader(data_settings.ValidationDirectory,batch_size=64, shuffle=True, num_workers=model_settings.num_workers),
-            "test": get_dataloader(data_settings.TestingDirectory, batch_size=64, shuffle=True, num_workers=model_settings.num_workers)
+            "train": get_dataloader(data_settings.TrainingDirectory, batch_size=self.batch_size, shuffle=True, num_workers=model_settings.num_workers),
+            "valid": get_dataloader(data_settings.ValidationDirectory,batch_size=self.batch_size, shuffle=True, num_workers=model_settings.num_workers),
+            "test": get_dataloader(data_settings.TestingDirectory, batch_size=self.batch_size, shuffle=True, num_workers=model_settings.num_workers)
         }
 
         return dataloaders
 
-    def train(self, learning_rate=0.001, num_epochs=16, num_workers=model_settings.num_workers, save_model=True):
+    def train(self, learning_rate=0.01, num_epochs=16, num_workers=model_settings.num_workers, save_model=True):
         num_workers = max(num_workers, self.num_workers)
         dataloaders = self.create_dataloaders(num_workers)
 
@@ -58,7 +57,7 @@ class ModelOperator:
                   f"Val Loss: {val_loss:.4f}, Val Accuracy: {val_acc:.2f}%")
 
         test_loss, test_acc, test_preds, test_labels = self._run_epoch(model, dataloaders['test'], optimizer, criterion, device)
-        
+
         if save_model:
             self.save_model(model, optimizer)
 
@@ -80,7 +79,7 @@ class ModelOperator:
 
                 # Unpack policy and value outputs
                 value_output = model(batch_x1)
-                
+
                 # Compute loss only on the value output
                 loss = criterion(value_output, batch_labels)
 

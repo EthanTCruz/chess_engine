@@ -27,17 +27,15 @@ class ChessEvalCNN(nn.Module):
     def forward(self, x):
         # x shape: (batch_size, N, 8, 8)
         
-        # Pass through first conv block
+        # Pass through convolutional layers
         x = self.conv1(x)
         x = self.bn1(x)
         x = F.relu(x)
         
-        # Pass through second conv block
         x = self.conv2(x)
         x = self.bn2(x)
         x = F.relu(x)
         
-        # Pass through third conv block
         x = self.conv3(x)
         x = self.bn3(x)
         x = F.relu(x)
@@ -49,11 +47,7 @@ class ChessEvalCNN(nn.Module):
         x = F.relu(self.fc1(x))
         logits = self.fc2(x)  # (batch_size, 3)
         
-        # Apply softmax to get probabilities.
-        # For training with CrossEntropyLoss, you would typically omit this softmax here 
-        # and let the loss handle it. Here we show it explicitly for clarity.
-        probs = F.softmax(logits, dim=1)
-        return probs
+        return logits  # Return raw logits
 
 # Example usage:
 # Suppose N=12 for a standard set of piece bitboards (6 for White, 6 for Black), 

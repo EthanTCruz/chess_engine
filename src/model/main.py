@@ -38,7 +38,7 @@ epochs = model_settings.Epochs
 
 if settings.useSamplePgn:
     pgn_file=settings.samplePgn
-# pgn_file=settings.samplePgn
+pgn_file=settings.samplePgn
 
 
 

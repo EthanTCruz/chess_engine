@@ -2,6 +2,7 @@ from chess_engine.src.model.classes.sqlite.models import GamePositionRollup
 import numpy as np
 from tqdm import tqdm
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import bitboards_to_array, sample_bitboard_dict
+
 from chess_engine.src.model.classes.sqlite.database import  get_db
 from chess_engine.src.model.config.config import data_settings
 import os
@@ -109,6 +110,10 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
 
                             # Extract labels
                             labels = record.win_buckets
+
+                            if record.turn == 'b':
+                                labels = labels[::-1]
+                                features = features[:, ::-1, ::-1]
 
                             features_list.append(features)
                             labels_list.append(labels)
