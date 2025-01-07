@@ -45,7 +45,7 @@ class ModelOperator:
 
         return dataloaders
 
-    def train(self, learning_rate=0.01, num_epochs=16, num_workers=model_settings.num_workers, save_model=True):
+    def train(self, learning_rate=model_settings.learning_rate, num_epochs=16, num_workers=model_settings.num_workers, save_model=True):
         set_seed()
         num_workers = max(num_workers, self.num_workers)
         dataloaders = self.create_dataloaders(num_workers)

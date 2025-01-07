@@ -36,3 +36,5 @@ env/
 src/model/data/validation/*
 src/model/data/training/*
 src/model/data/testing/*
+
+.env

@@ -50,7 +50,9 @@ class ModelSettings(BaseSettings):
     nnModelCheckpoint: str = f"{ModelFilePath}checkpoints/"
     data_dir: str = f"{settings.srcModelDirectory}/data"
     
+    
     Epochs: int = 16
+    learning_rate: float = 0.001
     TestSize: float = 0.02
     ValidationSize: float  = 0.02
     TrainSize: float = 1.0 - TestSize - ValidationSize
