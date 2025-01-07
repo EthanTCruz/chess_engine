@@ -15,13 +15,23 @@ from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import 
 from chess_engine.src.model.classes.h5py_piping.dataloader import get_dataloader, HDF5SingleFileDataset
 from chess_engine.src.model.classes.basic_model import ChessEvalCNN
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
+import random
 
-
+def set_seed(seed=42):
+    random.seed(seed)  # Python random module
+    np.random.seed(seed)  # NumPy
+    torch.manual_seed(seed)  # PyTorch
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)  # For CUDA
+        torch.cuda.manual_seed_all(seed)  # For multi-GPU setups
+    torch.backends.cudnn.deterministic = True  # Ensures deterministic behavior
+    torch.backends.cudnn.benchmark = False  # Disables auto-tuning for deterministic results
 
 
 # Define the ModelOperator class
 class ModelOperator:
     def __init__(self):
+        set_seed()
         self.batch_size = model_settings.DataLoaderBatchSize
         self.num_workers = model_settings.num_workers
         self.model_path = model_settings.torch_model_file
@@ -36,6 +46,7 @@ class ModelOperator:
         return dataloaders
 
     def train(self, learning_rate=0.01, num_epochs=16, num_workers=model_settings.num_workers, save_model=True):
+        set_seed()
         num_workers = max(num_workers, self.num_workers)
         dataloaders = self.create_dataloaders(num_workers)
 
