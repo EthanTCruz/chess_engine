@@ -31,9 +31,13 @@ Test accuracy: 0.8471933007240295
 Test loss: 0.44103720784187317
 Test accuracy: 0.8269000053405762
 
+Wow it's been a whole year
+01/08/25 - changed literally everything
+Class 0: Precision: 0.7391, Recall: 0.6430, F1-Score: 0.6877
+Class 1: Precision: 0.6695, Recall: 0.6921, F1-Score: 0.6806
+Class 2: Precision: 0.6551, Recall: 0.7159, F1-Score: 0.6841
 
-
-
+Accuracy: 75.01%, Val Loss: 0.7252, Val Accuracy: 68.05%
 
 docker tag chess_model:v1 ethancruz/chess_model
 docker push ethancruz/chess_model:latest
