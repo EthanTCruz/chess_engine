@@ -22,13 +22,13 @@ from chess_engine.src.model.classes.pgn_processor import pgn_processor
 from chess_engine.src.model.config.config import settings, model_settings
 
 from chess_engine.src.model.classes.endgame import endgamePicker
-from chess_engine.src.model.classes.torch_model import ModelOperator
+from chess_engine.src.model.classes.torch_model import ModelOperator, set_seed
 
 # from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
 from chess_engine.src.model.classes.h5py_piping.create_h5_files import db_to_hdf5_files
 from chess_engine.src.model.classes.h5py_piping.dataloader import get_dataloader_full_retrieval_time
 
-
+set_seed()
 
 
 pgn_file = settings.pgn_file
@@ -38,7 +38,7 @@ epochs = model_settings.Epochs
 
 if settings.useSamplePgn:
     pgn_file=settings.samplePgn
-pgn_file=settings.samplePgn
+# pgn_file=settings.samplePgn
 
 
 
@@ -54,15 +54,16 @@ pgn_file=settings.samplePgn
 
 
 def main():
-    # test_speeds()
-    # pgn_to_db()
-    get_data(pgn_file)
-    preprocess_data()
-    process_data()
-    # test_dataloader()
-    train_model()
-    # full_data_to_ml()
-    # initialize_collections()
+
+    if settings.getData:
+        get_data(pgn_file)
+    if settings.preprocessData:
+        preprocess_data()
+    if settings.processData:
+        process_data()
+    if settings.trainModel:
+        train_model()
+
     return 0
 
 

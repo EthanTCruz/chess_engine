@@ -1,9 +1,10 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
+
 
 class ChessEvalCNN(nn.Module):
-    def __init__(self, in_channels: int):
+    def __init__(self, in_channels: int = len(sample_bitboard_dict)):
         super(ChessEvalCNN, self).__init__()
         
         # Convolutional layers

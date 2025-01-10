@@ -14,7 +14,9 @@ from torch.utils.tensorboard import SummaryWriter  # For TensorBoard
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
 from chess_engine.src.model.classes.h5py_piping.dataloader import get_dataloader, HDF5SingleFileDataset
 from chess_engine.src.model.classes.basic_model import ChessEvalCNN
-from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
+from chess_engine.src.model.classes.basic_model_skip_connection import SkipChessEvalCNN
+from chess_engine.src.model.classes.deep_model import ChessEvalDeepCNN
+from chess_engine.src.model.classes.ResNet_model import ChessEvalResNet
 import random
 
 def set_seed(seed=42):
@@ -35,6 +37,13 @@ class ModelOperator:
         self.batch_size = model_settings.DataLoaderBatchSize
         self.num_workers = model_settings.num_workers
         self.model_path = model_settings.torch_model_file
+        self.model = ChessEvalCNN
+        if model_settings.modelType == "SkipChessEvalCNN":
+            self.model = SkipChessEvalCNN
+        if model_settings.modelType == "ChessEvalDeepCNN":
+            self.model = ChessEvalDeepCNN
+        if model_settings.modelType == "ChessEvalResNet":
+            self.model = ChessEvalResNet
 
     def create_dataloaders(self, num_workers=0):
         dataloaders = {
@@ -51,7 +60,7 @@ class ModelOperator:
         dataloaders = self.create_dataloaders(num_workers)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = ChessEvalCNN(in_channels=len(sample_bitboard_dict)).to(device)  # Assuming 12 bitboards
+        model = self.model(in_channels=len(sample_bitboard_dict)).to(device)  # Assuming 12 bitboards
 
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()

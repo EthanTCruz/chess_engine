@@ -82,11 +82,13 @@ def create_rollup_table(
                 db.bulk_save_objects(batch)
                 db.commit()
                 batch.clear()
+                db.flush()
 
         # Commit any remaining records
         if batch:
             db.bulk_save_objects(batch)
             db.commit()
+            db.flush()
 
     except Exception as e:
         print(f"An error occurred: {e}")

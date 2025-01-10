@@ -31,9 +31,17 @@ class Settings(BaseSettings):
     trainModel: bool = False
     selfTrain: bool = False
     trainDataExists: bool = True
-    useSamplePgn: bool = False
+    
     saveToBucket: bool = False
     tuneParameters: bool = False
+    
+    useSamplePgn: bool = False
+    getData: bool = True
+    preprocessData: bool = True
+    processData: bool = True
+    trainModel: bool = True
+    
+    
 
     class Config:
         env_prefix = ''
@@ -51,7 +59,7 @@ class ModelSettings(BaseSettings):
     data_dir: str = f"{settings.srcModelDirectory}/data"
     
     
-    Epochs: int = 16
+    Epochs: int = 2
     learning_rate: float = 0.001
     TestSize: float = 0.02
     ValidationSize: float  = 0.02
@@ -62,6 +70,10 @@ class ModelSettings(BaseSettings):
     num_workers: int = 0
     torch_model_file: str = f"{settings.srcModelDirectory}/chess_model/torch_model.pth"
     
+    modelType: str = "ChessEvalCNN"
+    # SkipChessEvalCNN
+    # ChessEvalDeepCNN
+    # ChessEvalResNet
 
 model_settings = ModelSettings()
 
