@@ -36,8 +36,8 @@ class Settings(BaseSettings):
     tuneParameters: bool = False
     
     useSamplePgn: bool = False
-    getData: bool = True
-    preprocessData: bool = True
+    getData: bool = False
+    preprocessData: bool = False
     processData: bool = True
     trainModel: bool = True
     
