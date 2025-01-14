@@ -39,6 +39,14 @@ Class 2: Precision: 0.6551, Recall: 0.7159, F1-Score: 0.6841
 
 Accuracy: 75.01%, Val Loss: 0.7252, Val Accuracy: 68.05%
 
+01/11/25 - upped to 64 epochs
+
+Class 0: Precision: 0.6256, Recall: 0.6888, F1-Score: 0.6557
+Class 1: Precision: 0.6873, Recall: 0.6018, F1-Score: 0.6417
+Class 2: Precision: 0.6531, Recall: 0.6769, F1-Score: 0.6648
+
+Train Loss: 0.6155, Train Accuracy: 71.75%, Val Loss: 0.7769, Val Accuracy: 65.24%
+
 docker tag chess_model:v1 ethancruz/chess_model
 docker push ethancruz/chess_model:latest
 
