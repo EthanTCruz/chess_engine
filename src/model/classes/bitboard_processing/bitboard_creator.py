@@ -23,6 +23,21 @@ class Bitboard_Creator:
             for piece in chess.PIECE_TYPES
         }
         return bitboards
+    
+    def en_passant_bitboard_from_board(self,board: chess.Board) -> int:
+
+        fen = board.fen()  
+        parts = fen.split()  
+        ep_square = parts[3]  
+
+        if ep_square == "-":
+
+            return 0  
+        
+        square_index = chess.SQUARE_NAMES.index(ep_square)  
+
+        return 1 << square_index  
+
     def get_all_bitboards(self,board: chess.Board = chess.Board()):
         results_dict = {}
         
