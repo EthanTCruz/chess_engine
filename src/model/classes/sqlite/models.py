@@ -76,4 +76,5 @@ def create_standalone_model(class_name, attributes_dict):
 
 # Define dynamic models as standalone tables
 GamePositionRollup = create_standalone_model("GamePositionRollup", sample_bitboard_dict)
+GamePositionRollup_stg = create_standalone_model("GamePositionRollup_stg", sample_bitboard_dict)
 
