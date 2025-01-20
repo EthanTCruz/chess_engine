@@ -102,7 +102,7 @@ def remove_bracketed_portion(s):
     # This regex finds a portion enclosed in square brackets
     return re.sub(r'\[.*?\]', '', s)
 
-def board_to_GamePostition(board: chess.Board,victor: str = "NA"):
+def board_to_GamePostition(board: chess.Board,victor: str = "NA",original_board = None,original_victor = None):
     fen = board.fen()
     fen_components = fen.split(" ")
     piece_positions = remove_bracketed_portion(fen_components[0])
@@ -110,6 +110,7 @@ def board_to_GamePostition(board: chess.Board,victor: str = "NA"):
     castling_rights = fen_components[2]
     en_passant = fen_components[3]
 
+    
 
 
     white_wins = 0
@@ -127,7 +128,8 @@ def board_to_GamePostition(board: chess.Board,victor: str = "NA"):
         castling_rights = castling_rights,
         en_passant = en_passant,
         turn = turn,
-
+        original_victor = original_victor,
+        original_fen = original_board.fen(),
         white_wins = white_wins,
         black_wins = black_wins,
         stalemates = stalemates
@@ -480,8 +482,8 @@ def get_GamePositionRollup_row_size(db: Session = next(get_db())):
 
 def insert_bulk_boards_into_db(board_victors: List[Tuple[chess.Board, str]], db: Session = next(get_db())):
     games = []
-    for board, victor in board_victors:
-        games.append(board_to_GamePostition(board=board, victor=victor))
+    for board, victor,original_board, original_victor in board_victors:
+        games.append(board_to_GamePostition(board=board, victor=victor,original_board=original_board, original_victor=original_victor))
     
     try:
         db.bulk_save_objects(games)

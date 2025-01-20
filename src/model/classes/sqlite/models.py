@@ -34,6 +34,8 @@ class GamePositions(Base,WinBucketsMixin):
     castling_rights = Column(String, index=True)
     en_passant = Column(String, index=True)
     turn = Column(String, index=True)
+    original_fen = Column(String, index=True)
+    original_victor = Column(String, index=True)
     white_wins = Column(Integer)
     black_wins = Column(Integer)
     stalemates = Column(Integer)
@@ -76,5 +78,5 @@ def create_standalone_model(class_name, attributes_dict):
 
 # Define dynamic models as standalone tables
 GamePositionRollup = create_standalone_model("GamePositionRollup", sample_bitboard_dict)
-GamePositionRollup_stg = create_standalone_model("GamePositionRollup_stg", sample_bitboard_dict)
+
 

@@ -1,21 +1,22 @@
 import sys
 import os
-import csv
+
 import cowsay
 import chess
-import time
+
 from math import log,sqrt,e,inf
-import random
-import numpy as np
-import torch
+
+import os
+if os.path.exists('./chess_engine'):
+    os.chdir('./chess_engine')
 sys.path.append('../')
+
 from sqlalchemy.orm import  Session
 from chess_engine.src.model.classes.sqlite.database import SessionLocal
 from chess_engine.src.model.classes.sqlite.dependencies import (
     delete_all_game_positions,
     delete_all_rollup_game_positions,
-    find_rollup_move,
-    find_board_rollup)
+)
 from chess_engine.src.model.classes.sqlite.dataset_splitter import  create_rollup_table
 from chess_engine.src.model.classes.pgn_processor import pgn_processor
 
