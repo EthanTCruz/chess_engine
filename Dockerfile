@@ -29,5 +29,7 @@ ENV preprocessData False
 ENV processData False
 ENV trainModel True
 
+
+
 #CMD ["python","./chess_engine/src/model/main.py"]
 CMD while true; do sleep 10; done

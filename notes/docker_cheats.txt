@@ -1,4 +1,4 @@
-docker build . -t chess_model
+docker build --platform linux/arm64 . -t chess_model
 docker run chess_model:latest
 docker exec -it elastic_darwin /bin/bash
 docker tag chess_model ethancruz/chess_model:v1.0.8

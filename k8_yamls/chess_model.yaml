@@ -18,21 +18,26 @@ spec:
         - name: chess-model
           image: ethancruz/chess_model:v1.0.18
           env:
-          - name: mongo_url
-            value: "mongodb://mongo:27017/your-db-name"
-#           ports:
-#           - containerPort: 5000
-
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: chess-model-service
-# spec:
-#   selector:
-#     app: chess-model
-#   ports:
-#   - protocol: TCP
-#     port: 5000
-#     targetPort: 5000
-#   type: LoadBalancer
+            - name: modelType
+              value: "ChessEvalCNN"
+          ports:
+            - containerPort: 6006  # Expose TensorBoard
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              mkdir -p /app/logs  # Ensure log directory exists
+              python train_model.py --logdir /app/logs &  # Start training in the background
+              tensorboard --logdir /app/logs --host 0.0.0.0 --port 6006  # Start TensorBoard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chess-model-service
+spec:
+  selector:
+    app: chess-model
+  ports:
+    - protocol: TCP
+      port: 6006
+      targetPort: 6006
+  type: NodePort  # Use LoadBalancer if deploying to cloud
