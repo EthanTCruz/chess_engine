@@ -24,5 +24,10 @@ RUN pip install --no-cache-dir -r /usr/src/app/chess_engine/pi_requirements.txt
 # ENV BUCKET_NAME "chess-model-weights"
 # ENV saveToBucket True
 
+ENV getData False
+ENV preprocessData False
+ENV processData False
+ENV trainModel True
+
 #CMD ["python","./chess_engine/src/model/main.py"]
 CMD while true; do sleep 10; done
