@@ -55,24 +55,30 @@ class HDF5SingleFileDataset(Dataset):
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is None:
             with h5py.File(self.h5_file_path, 'r') as hf:
-                features = hf["features"][idx]
-                metadata = hf["metadata"][idx]
+                if self.transform:
+                    flattened_features = hf["flattened_features"][idx]
+                else:
+                    features = hf["features"][idx]
+                    metadata = hf["metadata"][idx]
 
         else:
             worker_id = worker_info.id
             if worker_id not in _worker_h5_handles:
                 raise KeyError(f"Worker {worker_id} does not have an HDF5 handle. Available: {_worker_h5_handles.keys()}")
             hf = _worker_h5_handles[worker_id]
-            features = hf["features"][idx]
-            metadata = hf["metadata"][idx]
+            if self.transform:
+                flattened_features = hf["flattened_features"][idx]
+            else:
+                features = hf["features"][idx]
+                metadata = hf["metadata"][idx]
 
 
         # Apply any transform you want to the features
         if self.transform:
-            features = self.transform(features)  
-            metadata = self.transform(metadata)
-            concatenated_output = torch.cat([features, metadata], dim=0)
-            return concatenated_output
+            flattened_features = torch.from_numpy(flattened_features).float()
+            # metadata = self.transform(metadata)
+            # concatenated_output = torch.cat([flattened_features, metadata], dim=0)
+            return flattened_features
 
 
         metadata_tensor = torch.from_numpy(metadata).float()

@@ -37,7 +37,10 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
     """
 
     num_bitboards = len(sample_bitboard_dict.keys())
+    
     num_metada = len(sample_metada.keys())
+    
+    flattened_num_bitboards = num_bitboards * 8 * 8 + num_metada
 
     sets = {
         data_settings.TrainingDirectory: GamePositionRollup.is_training_data.is_(True),
@@ -69,6 +72,14 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                 maxshape=(None, num_bitboards, 8, 8),
                 dtype="uint64",
                 chunks=(chunk_size, num_bitboards, 8, 8),
+                compression="gzip"
+            )
+            flattened_features_dset = h5f.create_dataset(
+                "flattened_features",
+                shape=(0, flattened_num_bitboards),
+                maxshape=(None, flattened_num_bitboards),
+                dtype="uint64",
+                chunks=(chunk_size, flattened_num_bitboards),
                 compression="gzip"
             )
             metadata_dset = h5f.create_dataset(
@@ -110,6 +121,7 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
 
                         # Collect batch data
                         features_list = []
+                        flattened_features_list = []
                         metadata_list = []
                         labels_list = []
 
@@ -119,6 +131,9 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                                                for attr in sample_bitboard_dict.keys()]
                             features = bitboards_to_array(bitboard_values)
                             metadata = get_metadata_from_gpr(record)
+                            
+                            flattened_features = np.concatenate((features.reshape(1,-1),metadata.reshape(1,-1)),axis=1)
+                            
                             # Extract labels
                             labels = record.win_buckets
 
@@ -127,12 +142,14 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                                 features = features[:, ::-1, ::-1]
 
                             features_list.append(features)
+                            flattened_features_list.append(flattened_features)
 
                             metadata_list.append(metadata)
                             labels_list.append(labels)
 
                         # Convert to NumPy arrays
                         features_array = np.array(features_list, dtype=np.float32)
+                        flattened_features_array = np.array(flattened_features_list, dtype=np.float32).squeeze(axis=1)
                         metadata_array   = np.array(metadata_list, dtype=np.float32)
                         labels_array   = np.array(labels_list, dtype=np.float32)
 
@@ -141,11 +158,13 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                         new_size = current_size + batch_size
 
                         features_dset.resize((new_size, num_bitboards, 8, 8))
+                        flattened_features_dset.resize((new_size, flattened_num_bitboards))
                         metadata_dset.resize((new_size, num_metada))
                         labels_dset.resize((new_size, 3))
                         
 
                         features_dset[current_size:new_size, ...] = features_array
+                        flattened_features_dset[current_size:new_size, ...] = flattened_features_array
                         metadata_dset[current_size:new_size, ...]   = metadata_array
                         labels_dset[current_size:new_size, ...]   = labels_array
                         
