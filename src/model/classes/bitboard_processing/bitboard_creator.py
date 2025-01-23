@@ -18,7 +18,7 @@ class Bitboard_Creator:
         
     def get_base_bitboards_dict(self,board):
         bitboards = {
-            f"{self.color_map[color]} {self.piece_map[piece]}": str(int(board.pieces(piece, color)))
+            f"{self.color_map[color]} {self.piece_map[piece]} Bitboard": str(int(board.pieces(piece, color)))
             for color in [chess.WHITE, chess.BLACK]
             for piece in chess.PIECE_TYPES
         }
@@ -44,6 +44,9 @@ class Bitboard_Creator:
         base_dict = self.get_base_bitboards_dict(board=board)
         
         results_dict.update(base_dict)
+
+        ep_bb = self.en_passant_bitboard_from_board(board=board)
+        results_dict['En Passant Bitboard'] = ep_bb
 
         return results_dict
     

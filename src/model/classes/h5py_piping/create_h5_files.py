@@ -2,6 +2,7 @@ from chess_engine.src.model.classes.sqlite.models import GamePositionRollup
 import numpy as np
 from tqdm import tqdm
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import bitboards_to_array, sample_bitboard_dict
+from chess_engine.src.model.classes.autoencoder.feature_extractor import get_metadata_from_gpr, sample_metada
 
 from chess_engine.src.model.classes.sqlite.database import  get_db
 from chess_engine.src.model.config.config import data_settings
@@ -36,6 +37,7 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
     """
 
     num_bitboards = len(sample_bitboard_dict.keys())
+    num_metada = len(sample_metada.keys())
 
     sets = {
         data_settings.TrainingDirectory: GamePositionRollup.is_training_data.is_(True),
@@ -69,6 +71,14 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                 chunks=(chunk_size, num_bitboards, 8, 8),
                 compression="gzip"
             )
+            metadata_dset = h5f.create_dataset(
+                "metadata",
+                shape=(0, num_metada),
+                maxshape=(None, num_metada),
+                dtype="uint64",
+                chunks=(chunk_size, num_metada),
+                compression="gzip"
+            )
             labels_dset = h5f.create_dataset(
                 "labels",
                 shape=(0, 3),
@@ -100,6 +110,7 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
 
                         # Collect batch data
                         features_list = []
+                        metadata_list = []
                         labels_list = []
 
                         for record in records:
@@ -107,7 +118,7 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                             bitboard_values = [getattr(record, attr) 
                                                for attr in sample_bitboard_dict.keys()]
                             features = bitboards_to_array(bitboard_values)
-
+                            metadata = get_metadata_from_gpr(record)
                             # Extract labels
                             labels = record.win_buckets
 
@@ -116,19 +127,26 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
                                 features = features[:, ::-1, ::-1]
 
                             features_list.append(features)
+
+                            metadata_list.append(metadata)
                             labels_list.append(labels)
 
                         # Convert to NumPy arrays
                         features_array = np.array(features_list, dtype=np.float32)
+                        metadata_array   = np.array(metadata_list, dtype=np.float32)
                         labels_array   = np.array(labels_list, dtype=np.float32)
+
 
                         batch_size = features_array.shape[0]
                         new_size = current_size + batch_size
 
                         features_dset.resize((new_size, num_bitboards, 8, 8))
+                        metadata_dset.resize((new_size, num_metada))
                         labels_dset.resize((new_size, 3))
+                        
 
                         features_dset[current_size:new_size, ...] = features_array
+                        metadata_dset[current_size:new_size, ...]   = metadata_array
                         labels_dset[current_size:new_size, ...]   = labels_array
                         
 

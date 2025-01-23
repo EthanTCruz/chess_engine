@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     
     useSamplePgn: bool = False
     getData: bool = False
-    preprocessData: bool = True
+    preprocessData: bool = False
     processData: bool = True
     trainModel: bool = True
     
