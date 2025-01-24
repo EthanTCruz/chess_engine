@@ -57,9 +57,11 @@ class HDF5SingleFileDataset(Dataset):
             with h5py.File(self.h5_file_path, 'r') as hf:
                 if self.transform:
                     flattened_features = hf["flattened_features"][idx]
+                    labels = hf["labels"][idx]
                 else:
                     features = hf["features"][idx]
                     metadata = hf["metadata"][idx]
+                    labels = hf["labels"][idx]
 
         else:
             worker_id = worker_info.id
@@ -68,23 +70,25 @@ class HDF5SingleFileDataset(Dataset):
             hf = _worker_h5_handles[worker_id]
             if self.transform:
                 flattened_features = hf["flattened_features"][idx]
+                labels = hf["labels"][idx]
             else:
                 features = hf["features"][idx]
                 metadata = hf["metadata"][idx]
+                labels = hf["labels"][idx]
 
-
+        labels_tensor = torch.from_numpy(labels).float()
         # Apply any transform you want to the features
         if self.transform:
             flattened_features = torch.from_numpy(flattened_features).float()
             # metadata = self.transform(metadata)
             # concatenated_output = torch.cat([flattened_features, metadata], dim=0)
-            return flattened_features
+            return flattened_features, labels_tensor
 
 
         metadata_tensor = torch.from_numpy(metadata).float()
         features_tensor = torch.from_numpy(features).float()
         
-        return features_tensor, metadata_tensor
+        return features_tensor, metadata_tensor, labels_tensor
 
 
 def get_dataloader(h5_path, batch_size=32, shuffle=True, num_workers=4,transform=None):
