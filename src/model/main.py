@@ -29,6 +29,10 @@ from chess_engine.src.model.classes.torch_model import ModelOperator, set_seed
 from chess_engine.src.model.classes.h5py_piping.create_h5_files import db_to_hdf5_files
 from chess_engine.src.model.classes.h5py_piping.dataloader import get_dataloader_full_retrieval_time
 
+
+from chess_engine.src.model.classes.autoencoder.model_operator import train_encoder
+
+
 set_seed()
 
 
@@ -39,6 +43,7 @@ epochs = model_settings.Epochs
 
 if settings.useSamplePgn:
     pgn_file=settings.samplePgn
+
 # pgn_file=settings.samplePgn
 
 
@@ -55,7 +60,8 @@ if settings.useSamplePgn:
 
 
 def main():
-
+    if settings.trainEncoder:
+        train_encoder()
     if settings.getData:
         get_data(pgn_file)
     if settings.preprocessData:

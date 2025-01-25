@@ -2,9 +2,10 @@ import os
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from chess_engine.src.model.config.config import data_settings
+from chess_engine.src.model.config.config import data_settings, ae_settings
 import h5py
 import time
+
 
 # Global dictionary {worker_id: h5_file_object}
 _worker_h5_handles = {}
@@ -91,7 +92,12 @@ class HDF5SingleFileDataset(Dataset):
         return features_tensor, metadata_tensor, labels_tensor
 
 
-def get_dataloader(h5_path, batch_size=32, shuffle=True, num_workers=4,transform=None):
+def get_dataloader(h5_path, 
+                   batch_size=ae_settings.DataLoaderBatchSize, 
+                   shuffle=True, 
+                   num_workers=ae_settings.numWorkers,
+                   transform=None):
+    
     dataset = HDF5SingleFileDataset(h5_path,transform=transform)
     loader = DataLoader(
         dataset,
@@ -102,10 +108,31 @@ def get_dataloader(h5_path, batch_size=32, shuffle=True, num_workers=4,transform
     )
     return loader
 
+def get_dataloaders(transform,
+                    batch_size=ae_settings.DataLoaderBatchSize,
+                    num_workers=ae_settings.numWorkers):
+    train_loader = get_dataloader(data_settings.TrainingDirectory,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              num_workers=num_workers,
+                              transform=transform)
+    test_loader = get_dataloader(data_settings.TestingDirectory,
+                                  batch_size=batch_size,
+                                  shuffle=True,
+                                  num_workers=num_workers,
+                                  transform=transform)
+    valid_loader = get_dataloader(data_settings.ValidationDirectory,
+                                  batch_size=batch_size,
+                                  shuffle=True,
+                                  num_workers=num_workers,
+                                  transform=transform)
+    return train_loader, test_loader, valid_loader
+
+
 
 def get_dataloader_full_retrieval_time():
     num_epochs = 1
-    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=64, shuffle=True, num_workers=0)
+    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=ae_settings.DataLoaderBatchSize, shuffle=True, num_workers=ae_settings.numWorkers)
     start = time.time()
     i = 0
     for epoch in range(num_epochs):

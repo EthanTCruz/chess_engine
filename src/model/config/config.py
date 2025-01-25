@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
+
+
+
+
 load_dotenv()
 
 
@@ -35,12 +39,13 @@ class Settings(BaseSettings):
     saveToBucket: bool = False
     tuneParameters: bool = False
     
+
     useSamplePgn: bool = False
     getData: bool = False
     preprocessData: bool = False
     processData: bool = True
     trainModel: bool = True
-    
+    trainEncoder: bool = True
     
 
     class Config:
@@ -65,7 +70,7 @@ class ModelSettings(BaseSettings):
     ValidationSize: float  = 0.02
     TrainSize: float = 1.0 - TestSize - ValidationSize
 
-    DataLoaderBatchSize: int = 512
+    DataLoaderBatchSize: int = 64
     # Will only work as 0 while on windows
     num_workers: int = 0
     torch_model_file: str = f"{settings.srcModelDirectory}/chess_model/torch_model.pth"
@@ -77,13 +82,26 @@ class ModelSettings(BaseSettings):
 
 model_settings = ModelSettings()
 
+class AutoEncoderSettings(BaseSettings):
+    learningRate: float = 1e-3
+    numEpochs: int = 1
+    DataLoaderBatchSize: int = 64
+    numWorkers: int = 0
+    LatenDims: list = [64,32]
+
+ae_settings = AutoEncoderSettings()
+
+
 class DataLoaderSettings(BaseSettings):
     MaxCacheSize: int = 5
     BatchSize: int = 5096
     BatchFileSize: int = 10000000
     ChunkSize: int = 1
-
     DataDirectory: str = './src/model/data/'
+    if settings.useSamplePgn:
+        DataDirectory = f'{DataDirectory}sample/'
+
+        
     TrainingDirectory: str = f"{DataDirectory}training"
     TestingDirectory: str = f"{DataDirectory}testing"
     ValidationDirectory: str = f"{DataDirectory}validation"

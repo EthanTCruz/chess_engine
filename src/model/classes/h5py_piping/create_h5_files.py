@@ -2,7 +2,7 @@ from chess_engine.src.model.classes.sqlite.models import GamePositionRollup
 import numpy as np
 from tqdm import tqdm
 from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import bitboards_to_array, sample_bitboard_dict
-from chess_engine.src.model.classes.autoencoder.feature_extractor import get_metadata_from_gpr, sample_metada
+from chess_engine.src.model.classes.autoencoder.FeatureExtractor import get_metadata_from_gpr, sample_metadata
 
 from chess_engine.src.model.classes.sqlite.database import  get_db
 from chess_engine.src.model.config.config import data_settings
@@ -38,7 +38,7 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
 
     num_bitboards = len(sample_bitboard_dict.keys())
     
-    num_metada = len(sample_metada.keys())
+    num_metada = len(sample_metadata.keys())
     
     flattened_num_bitboards = num_bitboards * 8 * 8 + num_metada
 

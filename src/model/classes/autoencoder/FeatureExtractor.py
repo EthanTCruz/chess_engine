@@ -69,4 +69,4 @@ def get_metadata_from_gpr(gpr: GamePositionRollup):
 
     return np.array(list(castling_rights.values()))
 
-sample_metada = fe.get_metadata_from_board(board=chess.Board())
+sample_metadata = fe.get_metadata_from_board(board=chess.Board())
