@@ -60,14 +60,19 @@ if settings.useSamplePgn:
 
 
 def main():
-    if settings.trainEncoder:
-        train_encoder()
+
     if settings.getData:
         get_data(pgn_file)
+
     if settings.preprocessData:
         preprocess_data()
+
     if settings.processData:
         process_data()
+
+    if settings.trainEncoder:
+        train_encoder()
+
     if settings.trainModel:
         train_model()
 

@@ -8,7 +8,8 @@ git clone https://github.com/EthanTCruz/chess_engine.git
 cd chess_engine
 pip install -r pi_requirements.txt
 tmux new -s train
-sqlite3 src/model/data/sampleGameData.db
+
 mkdir src/model/data/testing
 mkdir src/model/data/training
 mkdir src/model/data/validation
+sqlite3 src/model/data/sampleGameData.db
