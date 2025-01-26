@@ -2,14 +2,7 @@
 
 import torch
 import torch.nn as nn
-import os
-if os.getcwd().endswith('notebooks'):
-    print('here')
-    os.chdir(r'..')
-    os.chdir(r'..')
-    os.chdir(r'chess_engine')
-import sys
-sys.path.append('../')
+
 # Local imports (adjust paths to match your project)
 from chess_engine.src.model.classes.autoencoder.AE_DataLoader import get_dataloaders, FlattenTransform
 from chess_engine.src.model.classes.models.autoencoder.SingleInputAutoEncoder import SingleInputAutoencoder
