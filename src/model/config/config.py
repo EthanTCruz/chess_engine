@@ -92,6 +92,9 @@ class AutoEncoderSettings(BaseSettings):
 
 ae_settings = AutoEncoderSettings()
 
+class DeepChessModelSettings(ModelSettings):
+    input_dim: int = 836
+    latent_dim: int = 128
 
 class DataLoaderSettings(BaseSettings):
     MaxCacheSize: int = 5

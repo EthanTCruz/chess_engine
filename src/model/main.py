@@ -4,7 +4,7 @@ import os
 import cowsay
 import chess
 
-from math import log,sqrt,e,inf
+
 
 import os
 if os.path.exists('./chess_engine'):
@@ -28,9 +28,9 @@ from chess_engine.src.model.classes.model_training.torch_model import ModelOpera
 # from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
 from chess_engine.src.model.classes.process_data.create_h5_files import db_to_hdf5_files
 from chess_engine.src.model.classes.dataloader.dataloader import get_dataloader_full_retrieval_time
+from chess_engine.src.model.classes.models.deepChessModel import DeepChessModel
 
-
-from chess_engine.src.model.classes.autoencoder.model_operator import AutoencoderTrainer
+from chess_engine.src.model.classes.model_training.autoencoder_operator import AutoencoderTrainer
 
 
 set_seed()
@@ -110,7 +110,7 @@ def test_dataloader():
 
 def train_model():
     cowsay.cow(f"Training model")  
-    model = ModelOperator()
+    model = ModelOperator(model=DeepChessModel)
     model.train(num_epochs=epochs,save_model=True)
 
 

@@ -2,21 +2,17 @@ import sys
 sys.path.append("../")
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import  DataLoader
-from chess_engine.src.model.config.config import  model_settings, data_settings
+
+from chess_engine.src.model.config.config import  model_settings
 from tqdm import tqdm
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter  # For TensorBoard
-from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
-from chess_engine.src.model.classes.dataloader.dataloader import get_dataloader, HDF5SingleFileDataset
-from chess_engine.src.model.classes.models.cnn.basic_model import ChessEvalCNN
-from chess_engine.src.model.classes.models.cnn.basic_model_skip_connection import SkipChessEvalCNN
-from chess_engine.src.model.classes.models.cnn.deep_model import ChessEvalDeepCNN
-from chess_engine.src.model.classes.models.cnn.ResNet_model import ChessEvalResNet
+
+from chess_engine.src.model.classes.autoencoder.AE_Dataloader import get_dataloaders
+
 import random
 
 def set_seed(seed=42):
@@ -32,24 +28,24 @@ def set_seed(seed=42):
 
 # Define the ModelOperator class
 class ModelOperator:
-    def __init__(self):
+    def __init__(self,model=None,transform=True):
         set_seed()
         self.batch_size = model_settings.DataLoaderBatchSize
         self.num_workers = model_settings.num_workers
         self.model_path = model_settings.torch_model_file
-        self.model = ChessEvalCNN
-        if model_settings.modelType == "SkipChessEvalCNN":
-            self.model = SkipChessEvalCNN
-        if model_settings.modelType == "ChessEvalDeepCNN":
-            self.model = ChessEvalDeepCNN
-        if model_settings.modelType == "ChessEvalResNet":
-            self.model = ChessEvalResNet
+        self.transform = transform
+        if model:
+            self.model = model
+        else:
+            print("No model provided")
+
 
     def create_dataloaders(self, num_workers=0):
+        train_loader, test_loader, val_loader = get_dataloaders(self.transform )
         dataloaders = {
-            "train": get_dataloader(data_settings.TrainingDirectory, batch_size=self.batch_size, shuffle=True, num_workers=model_settings.num_workers),
-            "valid": get_dataloader(data_settings.ValidationDirectory,batch_size=self.batch_size, shuffle=True, num_workers=model_settings.num_workers),
-            "test": get_dataloader(data_settings.TestingDirectory, batch_size=self.batch_size, shuffle=True, num_workers=model_settings.num_workers)
+            "train": train_loader,
+            "valid": val_loader,
+            "test": test_loader
         }
 
         return dataloaders
@@ -60,7 +56,7 @@ class ModelOperator:
         dataloaders = self.create_dataloaders(num_workers)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = self.model(in_channels=len(sample_bitboard_dict)).to(device)  # Assuming 12 bitboards
+        model = self.model().to(device)  # Assuming 12 bitboards
 
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()
@@ -138,7 +134,7 @@ class ModelOperator:
 
     def load_model(self, model_path):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = ChessEvalCNN(in_channels=len(sample_bitboard_dict)).to(device)  # Assuming 12 bitboards
+        self.model = self.model().to(device)  # Assuming 12 bitboards
         self.optimizer = optim.Adam(self.model.parameters())
 
         checkpoint = torch.load(model_path, map_location=device)

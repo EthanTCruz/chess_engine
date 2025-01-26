@@ -31,8 +31,9 @@ def get_encoder( model_path: str = f"{ae_settings.modelFilePath}autoencoder{ae_s
     checkpoint = torch.load(model_path, map_location=device)
     auto_encoder.load_state_dict(checkpoint['model_state_dict'])
     
+    encoder = auto_encoder.get_encoder()
     encoder = encoder.to(device)
-    encoder.model.eval()
+    encoder.eval()
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     print(f"Model loaded from {model_path}")

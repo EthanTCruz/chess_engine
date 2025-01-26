@@ -5,6 +5,7 @@ from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import 
 from chess_engine.src.model.classes.autoencoder.FeatureExtractor import sample_metadata
 from chess_engine.src.model.classes.models.autoencoder.get_autoencoder_model import get_autoencoder, get_encoder
 from chess_engine.src.model.config.config import ae_settings
+import torch
 
 input_dim = len(sample_metadata) + len(sample_bitboard_dict)*8*8
 
@@ -23,19 +24,18 @@ class DeepChessModel(nn.Module):
             param.requires_grad = False
 
 
-        self.evaluation = nn.Sequential(self.encoder,
-                                        nn.Linear(ae_settings.LatenDims[-1], 256),  
+        self.evaluation = nn.Sequential(nn.Linear(ae_settings.LatenDims[-1], 256),  
                                         nn.ReLU(inplace=True),
                                         nn.Linear(256, 128),  
                                         nn.ReLU(inplace=True),
                                         nn.Linear(128, 64),  
                                         nn.ReLU(inplace=True),
-                                        nn.Linear(64, 3)
-
-        )
+                                        nn.Linear(64, 3))
 
 
         
     def forward(self, x):
-        z = self.evaluation(x)
+        with torch.no_grad():
+            g = self.encoder(x)
+        z = self.evaluation(g)
         return z

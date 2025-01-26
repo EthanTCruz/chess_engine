@@ -81,8 +81,7 @@ class HDF5SingleFileDataset(Dataset):
         # Apply any transform you want to the features
         if self.transform:
             flattened_features = torch.from_numpy(flattened_features).float()
-            # metadata = self.transform(metadata)
-            # concatenated_output = torch.cat([flattened_features, metadata], dim=0)
+
             return flattened_features, labels_tensor
 
 
