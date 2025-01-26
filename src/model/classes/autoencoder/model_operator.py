@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 # Local imports (adjust paths to match your project)
-from chess_engine.src.model.classes.autoencoder.AE_DataLoader import get_dataloaders, FlattenTransform
+from chess_engine.src.model.classes.autoencoder.AE_Dataloader import get_dataloaders, FlattenTransform
 from chess_engine.src.model.classes.models.autoencoder.SingleInputAutoEncoder import SingleInputAutoencoder
 from chess_engine.src.model.config.config import ae_settings
 from chess_engine.src.model.classes.models.autoencoder.ExtendedAutoencoder import ExtendedAutoencoder
