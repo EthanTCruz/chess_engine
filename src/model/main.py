@@ -17,20 +17,20 @@ from chess_engine.src.model.classes.sqlite.dependencies import (
     delete_all_game_positions,
     delete_all_rollup_game_positions,
 )
-from chess_engine.src.model.classes.sqlite.dataset_splitter import  create_rollup_table
-from chess_engine.src.model.classes.pgn_processor import pgn_processor
+from chess_engine.src.model.classes.preprocess_data.dataset_splitter import  create_rollup_table
+from chess_engine.src.model.classes.collect_data.pgn_processor import pgn_processor
 
 from chess_engine.src.model.config.config import settings, model_settings
 
-from chess_engine.src.model.classes.endgame import endgamePicker
-from chess_engine.src.model.classes.torch_model import ModelOperator, set_seed
+from chess_engine.src.model.classes.applied_model.endgame import endgamePicker
+from chess_engine.src.model.classes.model_training.torch_model import ModelOperator, set_seed
 
 # from chess_engine.src.model.classes.npz_piping.create_npz_files import db_to_npz_files
-from chess_engine.src.model.classes.h5py_piping.create_h5_files import db_to_hdf5_files
-from chess_engine.src.model.classes.h5py_piping.dataloader import get_dataloader_full_retrieval_time
+from chess_engine.src.model.classes.process_data.create_h5_files import db_to_hdf5_files
+from chess_engine.src.model.classes.dataloader.dataloader import get_dataloader_full_retrieval_time
 
 
-from chess_engine.src.model.classes.autoencoder.model_operator import train_encoder
+from chess_engine.src.model.classes.autoencoder.model_operator import AutoencoderTrainer
 
 
 set_seed()
@@ -76,7 +76,10 @@ def main():
 
 
 
-
+def train_encoder():
+    cowsay.cow(f"Training encoder")  
+    ae = AutoencoderTrainer()
+    ae.train_encoder()
 
 
 def get_data(pgn_file = pgn_file,db: Session = SessionLocal()):

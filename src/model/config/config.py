@@ -73,7 +73,7 @@ class ModelSettings(BaseSettings):
     DataLoaderBatchSize: int = 64
     # Will only work as 0 while on windows
     num_workers: int = 0
-    torch_model_file: str = f"{settings.srcModelDirectory}/chess_model/torch_model.pth"
+    torch_model_file: str = f"{ModelFilePath}torch_model.pth"
     
     modelType: str = "ChessEvalCNN"
     # SkipChessEvalCNN
@@ -84,10 +84,11 @@ model_settings = ModelSettings()
 
 class AutoEncoderSettings(BaseSettings):
     learningRate: float = 1e-3
-    numEpochs: int = 1
-    DataLoaderBatchSize: int = 64
+    numEpochs: int = 16
+    DataLoaderBatchSize: int = 4096
     numWorkers: int = 0
-    LatenDims: list = [64,32]
+    LatenDims: list = [400,300,200,100]
+    modelFilePath: str = f"{model_settings.ModelFilePath}autoencoder/"
 
 ae_settings = AutoEncoderSettings()
 

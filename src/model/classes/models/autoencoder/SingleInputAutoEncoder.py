@@ -6,6 +6,8 @@ from chess_engine.src.model.classes.autoencoder.FeatureExtractor import sample_m
 
 input_dim = len(sample_metadata) + len(sample_bitboard_dict)*8*8
 
+
+
 class SingleInputAutoencoder(nn.Module):
     def __init__(self, input_dim=input_dim, latent_dim=128):
         """
@@ -16,23 +18,19 @@ class SingleInputAutoencoder(nn.Module):
         self.latent_dim = latent_dim
         # Encoder
         self.encoder = nn.Sequential(
-            nn.Linear(input_dim, 512),
-            nn.ReLU(inplace=True),
-            nn.Linear(512, 256),
-            nn.ReLU(inplace=True),
-            nn.Linear(256, latent_dim),
+            nn.Linear(input_dim, 700),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(700, latent_dim),
+            nn.LeakyReLU(inplace=True),
             # Optionally add an activation or not, depending on how you want your latent space
         )
 
         # Decoder
         self.decoder = nn.Sequential(
-            nn.Linear(latent_dim, 256),
-            nn.ReLU(inplace=True),
-            nn.Linear(256, 512),
-            nn.ReLU(inplace=True),
-            nn.Linear(512, input_dim),
+
+            nn.Linear(latent_dim, input_dim),
             # For final activation, if your data is normalized [0,1] you might do Sigmoid here
-            # nn.Sigmoid()
+            nn.Sigmoid()
         )
 
     def encode(self, x):
