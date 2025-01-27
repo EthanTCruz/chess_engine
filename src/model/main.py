@@ -18,7 +18,7 @@ from chess_engine.src.model.classes.sqlite.dependencies import (
     delete_all_rollup_game_positions,
 )
 from chess_engine.src.model.classes.preprocess_data.dataset_splitter import  create_rollup_table
-from chess_engine.src.model.classes.collect_data.pgn_processor import pgn_processor
+from chess_engine.src.model.classes.collect_data.pgn_processor import PGNProcessor
 
 from chess_engine.src.model.config.config import settings, model_settings
 
@@ -60,6 +60,9 @@ if settings.useSamplePgn:
 
 
 def main():
+    pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=8)
+    pgn_obj.split_large_pgn_files(delete_after_split=True)
+    # pgn_obj.process_all_pgns_parallel()
 
     if settings.getData:
         get_data(pgn_file)
@@ -90,11 +93,12 @@ def train_encoder():
 def get_data(pgn_file = pgn_file,db: Session = SessionLocal()):
     cowsay.cow(f"Converting PGN's to SQLITE")    
     delete_all_game_positions(db = db)
-    pgn_obj = pgn_processor(pgn_file=pgn_file)
-    pgn_obj.pgn_fen_to_sqlite()
+    pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=8)
+    pgn_obj.split_large_pgn_files(delete_after_split=True)
+    pgn_obj.process_all_pgns_parallel()
 
 def preprocess_data():
-    cowsay.cow(f"Converting pgn file to sqlite db")    
+    cowsay.cow(f"Aggregating data into rollup table")    
     delete_all_rollup_game_positions()
     create_rollup_table(yield_size=256,db=SessionLocal())
 

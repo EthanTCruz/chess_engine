@@ -1,69 +1,163 @@
 import chess.pgn
 from tqdm import tqdm
-from sqlalchemy.orm import  Session
-import os
 
+import os
+import multiprocessing
 from chess_engine.src.model.classes.sqlite.database import SessionLocal
 from chess_engine.src.model.classes.sqlite.dependencies import insert_bulk_boards_into_db
 
 
-class pgn_processor():
-    def __init__(self,pgn_file) -> None:
-        self.pgn_file = pgn_file
+class PGNProcessor:
+    def __init__(self, pgn_dir, batch_size=5000, num_workers=4):
+        """
+        :param pgn_dir: Directory containing PGN files.
+        :param batch_size: Number of board positions to insert per batch.
+        :param num_workers: Number of parallel processes to run.
+        """
+        self.pgn_dir = pgn_dir
+        self.batch_size = batch_size
+        self.num_workers = num_workers
 
+    def process_all_pgns_parallel(self):
+        """ Parallel processing of multiple PGN files using multiprocessing. """
+        pgn_files = [os.path.join(self.pgn_dir, f) for f in os.listdir(self.pgn_dir)]
 
-    
+        with multiprocessing.Pool(processes=self.num_workers) as pool:
+            pool.map(self.process_single_pgn, pgn_files)
 
+    def process_single_pgn(self, file_path):
+        """ Process a single PGN file and insert data in batches. """
+        db = SessionLocal()
+        board_victors = []
 
-    def pgn_fen_to_sqlite(self, db: Session = SessionLocal()):
-        for filename in os.listdir(self.pgn_file):
-            file = f"{self.pgn_file}/{filename}"
-            total_games = count_games_in_pgn(pgn_file=file)
-            with open(file, encoding='ISO-8859-1') as pgn:  # Specify the encoding
-                for _ in tqdm(range(total_games), desc=f"Processing {filename} Games to DB"):
+        with open(file_path, encoding='ISO-8859-1') as pgn:
+            with tqdm(desc=f"Processing {os.path.basename(file_path)}", unit=" game") as pbar:
+                while True:
                     game = chess.pgn.read_game(pgn)
-
                     if game is None:
-                        break  # end of file
-                    if game.headers["Result"] == '*':
-                        continue  # skip unfinished games
-                    board = game.board()
-                    board_victors = []
-                    victor = 'NA'
+                        break  # End of file
+                    if game.headers.get("Result") == '*':
+                        continue  # Skip unfinished games
 
-                    if game.headers["Result"] == '1-0':
-                        victor = 'w'
+                    victor = self.get_victor(game.headers["Result"])
+                    board_victors.extend(self.process_game(game, victor))
 
-                    elif game.headers["Result"] == '0-1':
-                        victor = 'b'
+                    pbar.update(1)
+
+                    if len(board_victors) >= self.batch_size:
+                        insert_bulk_boards_into_db(board_victors, db)
+                        board_victors.clear()  # Free memory
+
+        if board_victors:
+            insert_bulk_boards_into_db(board_victors, db)  # Insert remaining data
+        db.close()
+
+    def process_game(self, game, victor):
+        """ Extracts board positions from a game and assigns the winner. """
+        board = game.board()
+        board_victors = []
+
+        for move in game.mainline_moves():
+            board.push(move)
+
+            if not board.turn:  # If it's black's turn, store mirrored position
+                append_board = reverse_board(board)
+                append_victor = self.flip_victor(victor)
+            else:
+                append_board = board
+                append_victor = victor
+
+            board_victors.append((append_board.copy(), append_victor, board.copy(), victor))
+
+        return board_victors
+        
+
+    @staticmethod
+    def get_victor(result):
+        """ Converts PGN result notation to single-letter victor representation. """
+        if result == '1-0':
+            return 'w'
+        elif result == '0-1':
+            return 'b'
+        elif result == '1/2-1/2':
+            return 's'
+        else:
+            raise ValueError(f"Unexpected result format: {result}")
+
+    @staticmethod
+    def flip_victor(victor):
+        """ Swaps white and black victors for mirrored boards. """
+        return {'w': 'b', 'b': 'w', 's': 's'}.get(victor, 'NA')
+    
+    def split_large_pgn_files(self, max_size_mb=500, games_per_file=100000, delete_after_split=False):
+        """
+        Scans a directory for PGN files and splits any PGN files exceeding max_size_mb into smaller chunks.
+        
+        :param directory: Directory containing PGN files.
+        :param max_size_mb: Maximum allowed file size before splitting (in MB).
+        :param games_per_file: Number of games per split PGN file.
+        :param delete_after_split: If True, deletes the original PGN file after splitting.
+        """
+        if not os.path.exists(self.pgn_dir):
+            print(f"Error: Directory '{self.pgn_dir}' does not exist.")
+            return
+
+        for filename in os.listdir(self.pgn_dir):
+            if filename.endswith(".pgn"):
+                file_path = os.path.join(self.pgn_dir, filename)
+                file_size_mb = os.path.getsize(file_path) / (1024 * 1024)  # Convert bytes to MB
+
+                if file_size_mb > max_size_mb:
+                    print(f"Splitting {filename} ({file_size_mb:.2f} MB)...")
+                    if self.split_pgn_file(file_path, games_per_file):
+                        if delete_after_split:
+                            os.remove(file_path)  # Delete the original large PGN file
+                            print(f"🗑️ Deleted original PGN file: {filename}")
+                else:
+                    print(f"Skipping {filename} ({file_size_mb:.2f} MB) - Below size limit.")
+
+    def split_pgn_file(self,input_pgn, games_per_file):
+        """
+        Splits a large PGN file into smaller PGN chunks.
+
+        :param input_pgn: Path to the large PGN file.
+        :param games_per_file: Number of games per smaller PGN file.
+        :return: True if splitting was successful, False otherwise.
+        """
+        output_dir = os.path.dirname(input_pgn)
+        base_name = os.path.splitext(os.path.basename(input_pgn))[0]  # Remove .pgn extension
+
+        try:
+            with open(input_pgn, encoding='ISO-8859-1') as pgn:
+                file_count = 1
+                game_count = 0
+                output_pgn_path = os.path.join(output_dir, f"{base_name}_chunk_{file_count}.pgn")
+                output_pgn = open(output_pgn_path, "w", encoding='ISO-8859-1')
+
+                while True:
+                    game = chess.pgn.read_game(pgn)
+                    if game is None:
+                        break  # End of file
+
+                    print(game, file=output_pgn, end="\n\n")  # Write game to file
+                    game_count += 1
+
+                    if game_count >= games_per_file:
+                        output_pgn.close()
+                        file_count += 1
+                        game_count = 0
+                        output_pgn_path = os.path.join(output_dir, f"{base_name}_chunk_{file_count}.pgn")
+                        output_pgn = open(output_pgn_path, "w", encoding='ISO-8859-1')
+
+                output_pgn.close()
+                print(f"✅ {input_pgn} split into {file_count} smaller files.")
+                return True  # Splitting successful
+
+        except Exception as e:
+            print(f"❌ Error splitting {input_pgn}: {e}")
+            return False  # Splitting failed
 
 
-                    elif game.headers["Result"] == '1/2-1/2':
-                        victor = 's'
-                    else:
-                        print(game.headers["Result"])
-                        raise Exception("No winner")
-
-                    for move in game.mainline_moves():
-                        board.push(move=move)
-
-                        if not board.turn:
-                            append_board = reverse_board(board=board)
-
-                            if victor == 'b':
-                                append_victor = 'w'
-                            elif victor == 'w':
-                                append_victor = 'b'
-                            else:
-                                append_victor = 's'
-
-                        else:
-
-                            append_board = board
-                            append_victor = victor
-
-                        board_victors.append((append_board.copy(), append_victor,board.copy(),victor))
-                    insert_bulk_boards_into_db(board_victors=board_victors, db=db)
 
 
 
