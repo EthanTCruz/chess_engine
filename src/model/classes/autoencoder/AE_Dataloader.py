@@ -32,7 +32,7 @@ class HDF5SingleFileDataset(Dataset):
       - "features" of shape (N, num_bitboards, 8, 8)
       - "labels" of shape (N, 3)
     """
-    def __init__(self, h5_path, transform=None):
+    def __init__(self, h5_path, transform=None,device=torch.device('cpu')):
         """
         Args:
             h5_file_path (str): Path to the .h5 file ('data_all.h5').
@@ -42,7 +42,7 @@ class HDF5SingleFileDataset(Dataset):
         self.h5_file_path = f"{h5_path}/data_all.h5"
         assert os.path.exists(self.h5_file_path), f"HDF5 file not found at {self.h5_file_path}"
         self.transform = transform
-
+        self.device = device
         with h5py.File(self.h5_file_path, 'r', libver='latest', swmr=True) as h5f:
             self.length = h5f['features'].shape[0]
 
@@ -77,16 +77,16 @@ class HDF5SingleFileDataset(Dataset):
                 metadata = hf["metadata"][idx]
                 labels = hf["labels"][idx]
 
-        labels_tensor = torch.from_numpy(labels).float()
+        labels_tensor = torch.from_numpy(labels).float().to(self.device)
         # Apply any transform you want to the features
         if self.transform:
-            flattened_features = torch.from_numpy(flattened_features).float()
+            flattened_features = torch.from_numpy(flattened_features).float().to(self.device)
 
             return flattened_features, labels_tensor
 
 
-        metadata_tensor = torch.from_numpy(metadata).float()
-        features_tensor = torch.from_numpy(features).float()
+        metadata_tensor = torch.from_numpy(metadata).float().to(self.device)
+        features_tensor = torch.from_numpy(features).float().to(self.device)
         
         return features_tensor, metadata_tensor, labels_tensor
 

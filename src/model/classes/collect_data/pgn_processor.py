@@ -89,7 +89,7 @@ class PGNProcessor:
         """ Swaps white and black victors for mirrored boards. """
         return {'w': 'b', 'b': 'w', 's': 's'}.get(victor, 'NA')
     
-    def split_large_pgn_files(self, max_size_mb=500, games_per_file=100000, delete_after_split=False):
+    def split_large_pgn_files(self, max_size_mb=50, games_per_file=40000, delete_after_split=False):
         """
         Scans a directory for PGN files and splits any PGN files exceeding max_size_mb into smaller chunks.
         
