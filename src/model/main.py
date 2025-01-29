@@ -60,8 +60,7 @@ if settings.useSamplePgn:
 
 
 def main():
-    pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=8)
-    pgn_obj.split_large_pgn_files(delete_after_split=True)
+
     # pgn_obj.process_all_pgns_parallel()
 
     if settings.getData:
@@ -93,7 +92,7 @@ def train_encoder():
 def get_data(pgn_file = pgn_file,db: Session = SessionLocal()):
     cowsay.cow(f"Converting PGN's to SQLITE")    
     delete_all_game_positions(db = db)
-    pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=8)
+    pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=model_settings.num_workers)
     pgn_obj.split_large_pgn_files(delete_after_split=True)
     pgn_obj.process_all_pgns_parallel()
 

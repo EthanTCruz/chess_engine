@@ -1,32 +1,23 @@
 import chess.pgn
 from tqdm import tqdm
-
 import os
 import multiprocessing
 from chess_engine.src.model.classes.sqlite.database import SessionLocal
 from chess_engine.src.model.classes.sqlite.dependencies import insert_bulk_boards_into_db
-
+import sqlalchemy
 
 class PGNProcessor:
     def __init__(self, pgn_dir, batch_size=5000, num_workers=4):
-        """
-        :param pgn_dir: Directory containing PGN files.
-        :param batch_size: Number of board positions to insert per batch.
-        :param num_workers: Number of parallel processes to run.
-        """
         self.pgn_dir = pgn_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
 
     def process_all_pgns_parallel(self):
-        """ Parallel processing of multiple PGN files using multiprocessing. """
         pgn_files = [os.path.join(self.pgn_dir, f) for f in os.listdir(self.pgn_dir)]
-
         with multiprocessing.Pool(processes=self.num_workers) as pool:
             pool.map(self.process_single_pgn, pgn_files)
 
     def process_single_pgn(self, file_path):
-        """ Process a single PGN file and insert data in batches. """
         db = SessionLocal()
         board_victors = []
 
@@ -35,9 +26,9 @@ class PGNProcessor:
                 while True:
                     game = chess.pgn.read_game(pgn)
                     if game is None:
-                        break  # End of file
+                        break
                     if game.headers.get("Result") == '*':
-                        continue  # Skip unfinished games
+                        continue
 
                     victor = self.get_victor(game.headers["Result"])
                     board_victors.extend(self.process_game(game, victor))
@@ -45,22 +36,29 @@ class PGNProcessor:
                     pbar.update(1)
 
                     if len(board_victors) >= self.batch_size:
-                        insert_bulk_boards_into_db(board_victors, db)
-                        board_victors.clear()  # Free memory
+                        self.insert_bulk_boards_into_db(board_victors, db)
+                        board_victors.clear()
 
         if board_victors:
-            insert_bulk_boards_into_db(board_victors, db)  # Insert remaining data
+            self.insert_bulk_boards_into_db(board_victors, db)
         db.close()
 
+    def insert_bulk_boards_into_db(self, board_victors, db):
+        try:
+            insert_bulk_boards_into_db(board_victors, db)
+        except sqlalchemy.exc.OperationalError as e:
+            print(f"Error inserting into DB: {e}")
+            db.rollback()
+        else:
+            db.commit()
+
     def process_game(self, game, victor):
-        """ Extracts board positions from a game and assigns the winner. """
         board = game.board()
         board_victors = []
 
         for move in game.mainline_moves():
             board.push(move)
-
-            if not board.turn:  # If it's black's turn, store mirrored position
+            if not board.turn:
                 append_board = reverse_board(board)
                 append_victor = self.flip_victor(victor)
             else:
@@ -70,11 +68,9 @@ class PGNProcessor:
             board_victors.append((append_board.copy(), append_victor, board.copy(), victor))
 
         return board_victors
-        
 
     @staticmethod
     def get_victor(result):
-        """ Converts PGN result notation to single-letter victor representation. """
         if result == '1-0':
             return 'w'
         elif result == '0-1':
@@ -86,7 +82,6 @@ class PGNProcessor:
 
     @staticmethod
     def flip_victor(victor):
-        """ Swaps white and black victors for mirrored boards. """
         return {'w': 'b', 'b': 'w', 's': 's'}.get(victor, 'NA')
     
     def split_large_pgn_files(self, max_size_mb=50, games_per_file=40000, delete_after_split=False):
