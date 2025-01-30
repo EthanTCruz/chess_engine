@@ -46,9 +46,9 @@ spec:
       port: 8888       # Service port
       targetPort: 8888 # Container port in the Deployment
       protocol: TCP
-      nodePort: 8888  # Optional; if omitted, K8s will assign a random NodePort
+      nodePort: 30088   # Optional; if omitted, K8s will assign a random NodePort
     - name: tensroboard
       port: 5000
       targetPort: 5000
       protocol: TCP
-      nodePort: 5000  # Optional; if omitted, K8s will assign a random NodePort
+      nodePort: 30050    # Optional; if omitted, K8s will assign a random NodePort
