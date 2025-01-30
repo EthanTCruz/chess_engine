@@ -1,31 +1,54 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chess-model
+  name: chess_engine
+  labels:
+    app: chess_engine
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chess-model
+      app: chess_engine
   template:
     metadata:
       labels:
-        app: chess-model
+        app: chess_engine
     spec:
       containers:
-      - name: chess-model
-        image: ethancruz/chess_model:v1.0.8
-        imagePullPolicy: Always
+      - name: pytorch-container
+        # Replace with your actual Docker image
+        image: ethancruz/chess_model:v1.0.20
+        # Expose ports 8888 (commonly Jupyter) and 5000 (commonly Flask)
+        ports:
+        - containerPort: 8888
+        - containerPort: 5000
+        # Resource requests and limits:
         resources:
-          limits:
-            memory: "14Gi"
           requests:
-            memory: "12Gi"
-        volumeMounts:
-        - name: gcp-key
-          mountPath: "/var/secrets/google"
-          readOnly: true
-      volumes:
-      - name: gcp-key
-        secret:
-          secretName: my-gcp-secret
+            memory: "6Gi"
+            cpu: "4"
+          limits:
+            memory: "6Gi"
+            cpu: "4"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pytorch-service
+spec:
+  selector:
+    app: chess_engine
+  type: NodePort
+  ports:
+    - name: jupyter
+      port: 8888       # Service port
+      targetPort: 8888 # Container port in the Deployment
+      protocol: TCP
+      nodePort: 8888  # Optional; if omitted, K8s will assign a random NodePort
+    - name: tensroboard
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+      nodePort: 5000  # Optional; if omitted, K8s will assign a random NodePort
