@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chess_engine
+  name: chess-engine
   labels:
-    app: chess_engine
+    app: chess-engine
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chess_engine
+      app: chess-engine
   template:
     metadata:
       labels:
-        app: chess_engine
+        app: chess-engine
     spec:
       containers:
       - name: pytorch-container
@@ -39,7 +39,7 @@ metadata:
   name: pytorch-service
 spec:
   selector:
-    app: chess_engine
+    app: chess-engine
   type: NodePort
   ports:
     - name: jupyter
