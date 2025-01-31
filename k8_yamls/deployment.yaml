@@ -18,7 +18,7 @@ spec:
       containers:
       - name: pytorch-container
         # Replace with your actual Docker image
-        image: ethancruz/chess_model:v1.0.20
+        image: ethancruz/chess_model:v1.0.21
         # Expose ports 8888 (commonly Jupyter) and 5000 (commonly Flask)
         ports:
         - containerPort: 8888
@@ -27,10 +27,10 @@ spec:
         resources:
           requests:
             memory: "6Gi"
-            cpu: "2"
+            cpu: "3"
           limits:
             memory: "6Gi"
-            cpu: "2"
+            cpu: "3"
 
 ---
 apiVersion: v1
