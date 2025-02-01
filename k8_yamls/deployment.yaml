@@ -18,11 +18,13 @@ spec:
       containers:
       - name: pytorch-container
         # Replace with your actual Docker image
-        image: ethancruz/chess_model:v1.0.21
+        image: ethancruz/chess_model:v1.0.22
         # Expose ports 8888 (commonly Jupyter) and 5000 (commonly Flask)
         ports:
         - containerPort: 8888
         - containerPort: 5000
+        nodeSelector:
+          kubernetes.io/hostname: node1  # Ensure this runs on node2
         # Resource requests and limits:
         resources:
           requests:
@@ -31,6 +33,89 @@ spec:
           limits:
             memory: "6Gi"
             cpu: "3"
+        env:
+        - name: DATABASE_URL
+          value: "sqlite:///src/model/data/gameData.db"
+        - name: NUM_WORKERS
+          value: "2"
+        - name: NUM_EPOCHS
+          value: "64"
+        - name: EPOCHS
+          value: "64"
+        - name: DATALOADER_BATCH_SIZE
+          value: "64"
+        - name: USE_SAMPLE_PGN
+          value: "True"
+        - name: GET_DATA
+          value: "False"
+        - name: PREPROCESS_DATA
+          value: "False"
+        - name: PROCESS_DATA
+          value: "False"
+        - name: TRAIN_MODEL
+          value: "False"
+        - name: TRAIN_ENCODER
+          value: "True"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chess-engine-2
+  labels:
+    app: chess-engine-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chess-engine-2
+  template:
+    metadata:
+      labels:
+        app: chess-engine-2
+    spec:
+      containers:
+      - name: pytorch-container
+        # Replace with your actual Docker image
+        image: ethancruz/chess_model:v1.0.22
+        # Expose ports 8888 (commonly Jupyter) and 5000 (commonly Flask)
+        ports:
+        - containerPort: 8888
+        - containerPort: 5000
+        nodeSelector:
+          kubernetes.io/hostname: node2  # Ensure this runs on node2
+        # Resource requests and limits:
+        resources:
+          requests:
+            memory: "6Gi"
+            cpu: "3"
+          limits:
+            memory: "6Gi"
+            cpu: "3"
+
+        env:
+        - name: DATABASE_URL
+          value: "sqlite:///src/model/data/gameData.db"
+        - name: NUM_WORKERS
+          value: "2"
+        - name: NUM_EPOCHS
+          value: "64"
+        - name: EPOCHS
+          value: "64"
+        - name: DATALOADER_BATCH_SIZE
+          value: "64"
+        - name: USE_SAMPLE_PGN
+          value: "True"
+        - name: GET_DATA
+          value: "False"
+        - name: PREPROCESS_DATA
+          value: "False"
+        - name: PROCESS_DATA
+          value: "False"
+        - name: TRAIN_MODEL
+          value: "False"
+        - name: TRAIN_ENCODER
+          value: "True"
 
 ---
 apiVersion: v1
@@ -52,3 +137,23 @@ spec:
       targetPort: 5000
       protocol: TCP
       nodePort: 30050    # Optional; if omitted, K8s will assign a random NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pytorch-service
+spec:
+  selector:
+    app: chess-engine-2
+  type: NodePort
+  ports:
+    - name: jupyter
+      port: 8888       # Service port
+      targetPort: 8888 # Container port in the Deployment
+      protocol: TCP
+      nodePort: 30089   # Optional; if omitted, K8s will assign a random NodePort
+    - name: tensroboard
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+      nodePort: 30051    # Optional; if omitted, K8s will assign a random NodePort
