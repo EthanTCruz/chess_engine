@@ -16,7 +16,7 @@ spec:
         app: chess-engine
     spec:
       nodeSelector:
-        kubernetes.io/hostname: node1  # Ensure this runs on node2
+        kubernetes.io/hostname: node3  # Ensure this runs on node2
       containers:
       - name: pytorch-container
         # Replace with your actual Docker image
