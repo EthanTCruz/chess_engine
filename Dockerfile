@@ -30,6 +30,8 @@ ENV processData False
 ENV trainModel True
 
 
+EXPOSE 5000
+EXPOSE 8888
 
 #CMD ["python","./chess_engine/src/model/main.py"]
 CMD while true; do sleep 10; done

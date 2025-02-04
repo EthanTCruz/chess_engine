@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chess-engine
+  name: chess-engine-1
   labels:
-    app: chess-engine
+    app: chess-engine-1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chess-engine
+      app: chess-engine-1
   template:
     metadata:
       labels:
-        app: chess-engine
+        app: chess-engine-1
     spec:
       nodeSelector:
-        kubernetes.io/hostname: node3  # Ensure this runs on node2
+        kubernetes.io/hostname: node1  # Ensure this runs on node2
       containers:
       - name: pytorch-container
         # Replace with your actual Docker image
@@ -57,6 +57,21 @@ spec:
           value: "False"
         - name: TRAIN_ENCODER
           value: "True"
+        command: ["/bin/bash"]
+        args:
+          - "-c"
+          - |
+            # Change directory to your working directory:
+            cd ./chess_engine
+            
+            # Launch your main script (or python code) in a tmux session:
+            tmux new -d -s main_session 'python src/model/main.py'
+            
+            # Launch TensorBoard in another tmux session (bind to 0.0.0.0 so it’s accessible):
+            tmux new -d -s tb_session 'tensorboard --logdir=./runs --port=5000 --host=0.0.0.0'
+            
+            # Keep container running:
+            tail -f /dev/null
 
 ---
 apiVersion: apps/v1
@@ -105,7 +120,7 @@ spec:
         - name: EPOCHS
           value: "64"
         - name: DATALOADER_BATCH_SIZE
-          value: "64"
+          value: "128"
         - name: USE_SAMPLE_PGN
           value: "True"
         - name: GET_DATA
@@ -118,7 +133,97 @@ spec:
           value: "False"
         - name: TRAIN_ENCODER
           value: "True"
+        command: ["/bin/bash"]
+        args:
+          - "-c"
+          - |
+            # Change directory to your working directory:
+            cd ./chess_engine
+            
+            # Launch your main script (or python code) in a tmux session:
+            tmux new -d -s main_session 'python src/model/main.py'
+            
+            # Launch TensorBoard in another tmux session (bind to 0.0.0.0 so it’s accessible):
+            tmux new -d -s tb_session 'tensorboard --logdir=./runs --port=5000 --host=0.0.0.0'
+            
+            # Keep container running:
+            tail -f /dev/null
 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chess-engine-3
+  labels:
+    app: chess-engine-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chess-engine-3
+  template:
+    metadata:
+      labels:
+        app: chess-engine-3
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: node3  # Ensure this runs on node2
+      containers:
+      - name: pytorch-container
+        # Replace with your actual Docker image
+        image: ethancruz/chess_model:v1.0.22
+        # Expose ports 8888 (commonly Jupyter) and 5000 (commonly Flask)
+        ports:
+        - containerPort: 8888
+        - containerPort: 5000
+
+        # Resource requests and limits:
+        resources:
+          requests:
+            memory: "6Gi"
+            cpu: "3"
+          limits:
+            memory: "6Gi"
+            cpu: "3"
+
+        env:
+        - name: DATABASE_URL
+          value: "sqlite:///src/model/data/gameData.db"
+        - name: NUM_WORKERS
+          value: "2"
+        - name: NUM_EPOCHS
+          value: "64"
+        - name: EPOCHS
+          value: "64"
+        - name: DATALOADER_BATCH_SIZE
+          value: "256"
+        - name: USE_SAMPLE_PGN
+          value: "True"
+        - name: GET_DATA
+          value: "False"
+        - name: PREPROCESS_DATA
+          value: "False"
+        - name: PROCESS_DATA
+          value: "False"
+        - name: TRAIN_MODEL
+          value: "False"
+        - name: TRAIN_ENCODER
+          value: "True"
+        command: ["/bin/bash"]
+        args:
+          - "-c"
+          - |
+            # Change directory to your working directory:
+            cd ./chess_engine
+            
+            # Launch your main script (or python code) in a tmux session:
+            tmux new -d -s main_session 'python src/model/main.py'
+            
+            # Launch TensorBoard in another tmux session (bind to 0.0.0.0 so it’s accessible):
+            tmux new -d -s tb_session 'tensorboard --logdir=./runs --port=5000 --host=0.0.0.0'
+            
+            # Keep container running:
+            tail -f /dev/null
 ---
 apiVersion: v1
 kind: Service
@@ -126,7 +231,7 @@ metadata:
   name: pytorch-service
 spec:
   selector:
-    app: chess-engine
+    app: chess-engine-1
   type: NodePort
   ports:
     - name: jupyter
@@ -151,11 +256,32 @@ spec:
   ports:
     - name: jupyter
       port: 8888       # Service port
-      targetPort: 8888 # Container port in the Deployment
+      targetPort: 8889 # Container port in the Deployment
       protocol: TCP
       nodePort: 30089   # Optional; if omitted, K8s will assign a random NodePort
     - name: tensroboard
       port: 5000
       targetPort: 5000
       protocol: TCP
-      nodePort: 30051    # Optional; if omitted, K8s will assign a random NodePort
+      nodePort: 30052    # Optional; if omitted, K8s will assign a random NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pytorch-service
+spec:
+  selector:
+    app: chess-engine-3
+  type: NodePort
+  ports:
+    - name: jupyter
+      port: 8888       # Service port
+      targetPort: 8890 # Container port in the Deployment
+      protocol: TCP
+      nodePort: 30089   # Optional; if omitted, K8s will assign a random NodePort
+    - name: tensroboard
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+      nodePort: 30053    # Optional; if omitted, K8s will assign a random NodePort
