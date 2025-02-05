@@ -40,11 +40,11 @@ class Settings(BaseSettings):
     tuneParameters: bool = False
     
 
-    useSamplePgn: bool = False
+    useSamplePgn: bool = True
     getData: bool = False
     preprocessData: bool = False
-    processData: bool = True
-    trainModel: bool = True
+    processData: bool = False
+    trainModel: bool = False
     trainEncoder: bool = True
     
 
@@ -64,13 +64,13 @@ class ModelSettings(BaseSettings):
     data_dir: str = f"{settings.srcModelDirectory}/data"
     
     
-    Epochs: int = 2
+    Epochs: int = 100
     learning_rate: float = 0.001
     TestSize: float = 0.02
     ValidationSize: float  = 0.02
     TrainSize: float = 1.0 - TestSize - ValidationSize
 
-    DataLoaderBatchSize: int = 64
+    DataLoaderBatchSize: int = 4096
     # Will only work as 0 while on windows
     num_workers: int = 0
     torch_model_file: str = f"{ModelFilePath}torch_model.pth"
