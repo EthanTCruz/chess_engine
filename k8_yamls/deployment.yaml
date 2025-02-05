@@ -35,27 +35,27 @@ spec:
             memory: "6Gi"
             cpu: "3"
         env:
-        - name: DATABASE_URL
+        - name: MAIN_DATABASE_URL
           value: "sqlite:///src/model/data/gameData.db"
-        - name: NUM_WORKERS
+        - name: MODEL_NUM_WORKERS
           value: "2"
-        - name: NUM_EPOCHS
+        - name: AE_MODEL_NUM_EPOCHS
           value: "64"
-        - name: EPOCHS
+        - name: MODEL_EPOCHS
           value: "64"
-        - name: DATALOADER_BATCH_SIZE
+        - name: MODEL_DATALOADER_BATCH_SIZE
           value: "64"
-        - name: USE_SAMPLE_PGN
+        - name: MAIN_USE_SAMPLE_PGN
           value: "True"
-        - name: GET_DATA
+        - name: MAIN_GET_DATA
           value: "False"
-        - name: PREPROCESS_DATA
+        - name: MAIN_PREPROCESS_DATA
           value: "False"
-        - name: PROCESS_DATA
+        - name: MAIN_PROCESS_DATA
           value: "False"
-        - name: TRAIN_MODEL
+        - name: MAIN_TRAIN_MODEL
           value: "False"
-        - name: TRAIN_ENCODER
+        - name: MAIN_TRAIN_ENCODER
           value: "True"
         command: ["/bin/bash"]
         args:
@@ -111,27 +111,27 @@ spec:
             cpu: "3"
 
         env:
-        - name: DATABASE_URL
+        - name: MAIN_DATABASE_URL
           value: "sqlite:///src/model/data/gameData.db"
-        - name: NUM_WORKERS
+        - name: MODEL_NUM_WORKERS
           value: "2"
-        - name: NUM_EPOCHS
+        - name: AE_MODEL_NUM_EPOCHS
           value: "64"
-        - name: EPOCHS
+        - name: MODEL_EPOCHS
           value: "64"
-        - name: DATALOADER_BATCH_SIZE
+        - name: MODEL_DATALOADER_BATCH_SIZE
           value: "128"
-        - name: USE_SAMPLE_PGN
+        - name: MAIN_USE_SAMPLE_PGN
           value: "True"
-        - name: GET_DATA
+        - name: MAIN_GET_DATA
           value: "False"
-        - name: PREPROCESS_DATA
+        - name: MAIN_PREPROCESS_DATA
           value: "False"
-        - name: PROCESS_DATA
+        - name: MAIN_PROCESS_DATA
           value: "False"
-        - name: TRAIN_MODEL
+        - name: MAIN_TRAIN_MODEL
           value: "False"
-        - name: TRAIN_ENCODER
+        - name: MAIN_TRAIN_ENCODER
           value: "True"
         command: ["/bin/bash"]
         args:
@@ -187,27 +187,27 @@ spec:
             cpu: "3"
 
         env:
-        - name: DATABASE_URL
+        - name: MAIN_DATABASE_URL
           value: "sqlite:///src/model/data/gameData.db"
-        - name: NUM_WORKERS
+        - name: MODEL_NUM_WORKERS
           value: "2"
-        - name: NUM_EPOCHS
+        - name: AE_MODEL_NUM_EPOCHS
           value: "64"
-        - name: EPOCHS
+        - name: MODEL_EPOCHS
           value: "64"
-        - name: DATALOADER_BATCH_SIZE
+        - name: MODEL_DATALOADER_BATCH_SIZE
           value: "256"
-        - name: USE_SAMPLE_PGN
+        - name: MAIN_USE_SAMPLE_PGN
           value: "True"
-        - name: GET_DATA
+        - name: MAIN_GET_DATA
           value: "False"
-        - name: PREPROCESS_DATA
+        - name: MAIN_PREPROCESS_DATA
           value: "False"
-        - name: PROCESS_DATA
+        - name: MAIN_PROCESS_DATA
           value: "False"
-        - name: TRAIN_MODEL
+        - name: MAIN_TRAIN_MODEL
           value: "False"
-        - name: TRAIN_ENCODER
+        - name: MAIN_TRAIN_ENCODER
           value: "True"
         command: ["/bin/bash"]
         args:

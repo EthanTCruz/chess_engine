@@ -49,8 +49,8 @@ class Settings(BaseSettings):
     
 
     class Config:
-        env_prefix = ''
-        env_file = '.conf-env'
+        env_prefix = 'MAIN_'
+
 
 settings = Settings()
 
@@ -79,23 +79,29 @@ class ModelSettings(BaseSettings):
     # SkipChessEvalCNN
     # ChessEvalDeepCNN
     # ChessEvalResNet
+    class Config:
+        env_prefix = 'MODEL_'
 
 model_settings = ModelSettings()
 
 class AutoEncoderSettings(BaseSettings):
     learningRate: float = 1e-3
     numEpochs: int = 16
-    DataLoaderBatchSize: int = 4096
+    DataLoaderBatchSize: int = model_settings.DataLoaderBatchSize
     numWorkers: int = 0
     LatenDims: list = [600,400,300,200,100]
     modelFilePath: str = f"{model_settings.ModelFilePath}autoencoder/"
+    class Config:
+        env_prefix = 'AE_MODEL_'
 
 ae_settings = AutoEncoderSettings()
 
 class DeepChessModelSettings(ModelSettings):
     input_dim: int = 836
     latent_dim: int = 128
-
+    class Config:
+        env_prefix = 'DEEP_MODEL_'
+        
 class DataLoaderSettings(BaseSettings):
     MaxCacheSize: int = 5
     BatchSize: int = 5096
@@ -109,5 +115,7 @@ class DataLoaderSettings(BaseSettings):
     TrainingDirectory: str = f"{DataDirectory}training"
     TestingDirectory: str = f"{DataDirectory}testing"
     ValidationDirectory: str = f"{DataDirectory}validation"
-
+    class Config:
+        env_prefix = 'DATALOADER_'
+        
 data_settings = DataLoaderSettings()
