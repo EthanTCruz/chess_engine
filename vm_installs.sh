@@ -19,7 +19,10 @@ export MAIN_TRAIN_ENCODER="True"
 
 tmux new -s train
 
-mkdir src/model/data/testing
-mkdir src/model/data/training
-mkdir src/model/data/validation
+mkdir src/model/data/sample/
+mkdir src/model/data/sample/testing
+mkdir src/model/data/sample/training
+mkdir src/model/data/sample/validation
+mkdir src/model/chess_model/autoencoder
+
 sqlite3 src/model/data/sampleGameData.db

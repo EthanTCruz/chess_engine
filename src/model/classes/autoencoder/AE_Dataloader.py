@@ -12,7 +12,6 @@ _worker_h5_handles = {}
 
 def worker_init_fn(worker_id, h5_path):
     global _worker_h5_handles
-    print(f"Initializing worker {worker_id} with HDF5 file path: {h5_path}")
     if h5_path:
         _worker_h5_handles[worker_id] = h5py.File(h5_path, 'r', libver='latest', swmr=True)
         print(f"Worker {worker_id} initialized successfully.")
