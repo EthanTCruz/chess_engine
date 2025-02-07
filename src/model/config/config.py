@@ -89,7 +89,7 @@ class AutoEncoderSettings(BaseSettings):
     numEpochs: int = 16
     DataLoaderBatchSize: int = model_settings.DataLoaderBatchSize
     numWorkers: int = 0
-    LatenDims: list = [600,400,300,200,100]
+    LatenDims: list = [700,600,400,300,200,100]
     modelFilePath: str = f"{model_settings.ModelFilePath}autoencoder/"
     class Config:
         env_prefix = 'AE_MODEL_'
