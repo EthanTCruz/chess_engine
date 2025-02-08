@@ -28,14 +28,9 @@ terraform.rc
 
 runs/
 
-# src/model/data/gameData.db
-# src/model/data/gameData.db
-# src/model/data/sampleGameData.db
 
 env/
-# src/model/data/validation/*
-# src/model/data/training/*
-# src/model/data/testing/*
+
 
 .env
 src/model/pgn/full_dataset/AAlichess_db_standard_rated_2014-05_chunk_*
