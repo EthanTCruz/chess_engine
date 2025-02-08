@@ -14,7 +14,7 @@ def worker_init_fn(worker_id, h5_path):
     global _worker_h5_handles
     if h5_path:
         _worker_h5_handles[worker_id] = h5py.File(h5_path, 'r', libver='latest', swmr=True)
-        print(f"Worker {worker_id} initialized successfully.")
+        # print(f"Worker {worker_id} initialized successfully.")
 
 class FlattenTransform:
     def __call__(self, features):

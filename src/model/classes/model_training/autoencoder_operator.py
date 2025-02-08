@@ -15,7 +15,7 @@ class AutoencoderTrainer:
     def __init__(self):
         self.lr = ae_settings.learningRate
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.num_epochs = ae_settings.numEpochs
+        self.num_epochs = ae_settings.EPOCHS
         self.transform = FlattenTransform()
 
     def _train_epoch(self,model, dataloader, optimizer, criterion, device='cpu'):

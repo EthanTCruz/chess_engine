@@ -36,15 +36,14 @@ from chess_engine.src.model.classes.model_training.autoencoder_operator import A
 set_seed()
 
 
-pgn_file = settings.pgn_file
+pgnDataset = settings.pgnDataset
 
-epochs = model_settings.Epochs
+epochs = model_settings.EPOCHS
 
 
-if settings.useSamplePgn:
-    pgn_file=settings.samplePgn
 
-# pgn_file=settings.samplePgn
+
+
 
 
 
@@ -64,7 +63,7 @@ def main():
     # pgn_obj.process_all_pgns_parallel()
 
     if settings.getData:
-        get_data(pgn_file)
+        get_data(pgnDataset)
 
     if settings.preprocessData:
         preprocess_data()
@@ -89,7 +88,7 @@ def train_encoder():
     ae.train_encoder()
 
 
-def get_data(pgn_file = pgn_file,db: Session = SessionLocal()):
+def get_data(pgn_file = pgnDataset,db: Session = SessionLocal()):
     cowsay.cow(f"Converting PGN's to SQLITE")    
     delete_all_game_positions(db = db)
     pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=4)

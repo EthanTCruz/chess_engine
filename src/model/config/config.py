@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     srcModelDirectory: str = './src/model'
     pgn_file: str = f"{srcModelDirectory}/pgn/full_dataset/"
     samplePgn: str = f"{srcModelDirectory}/pgn/sample_dataset/"
+    pgnDir: str = f"{srcModelDirectory}/pgn/"
+    pgnDatasetName: str = "sample_dataset"
+    # full_dataset
+    # sample_dataset
+    # autoencoder_dataset
+    pgnDataset: str = f"{pgnDir}{pgnDatasetName}/"
+    
     nnLogDir: str = "./chess_engine/logs/"
 
     score_depth: int = 1
@@ -40,7 +47,7 @@ class Settings(BaseSettings):
     tuneParameters: bool = False
     
 
-    useSamplePgn: bool = True
+
     getData: bool = False
     preprocessData: bool = False
     processData: bool = False
@@ -64,7 +71,7 @@ class ModelSettings(BaseSettings):
     data_dir: str = f"{settings.srcModelDirectory}/data"
     
     
-    Epochs: int = 100
+    EPOCHS: int = 100
     learning_rate: float = 0.001
     TestSize: float = 0.02
     ValidationSize: float  = 0.02
@@ -86,7 +93,7 @@ model_settings = ModelSettings()
 
 class AutoEncoderSettings(BaseSettings):
     learningRate: float = 1e-3
-    numEpochs: int = 16
+    EPOCHS: int = 17
     DataLoaderBatchSize: int = model_settings.DataLoaderBatchSize
     numWorkers: int = 0
     LatenDims: list = [700,600,400,300,200,100]
@@ -108,8 +115,7 @@ class DataLoaderSettings(BaseSettings):
     BatchFileSize: int = 10000000
     ChunkSize: int = 1
     DataDirectory: str = './src/model/data/'
-    if settings.useSamplePgn:
-        DataDirectory = f'{DataDirectory}sample/'
+    DataDirectory = f'{DataDirectory}{settings.pgnDatasetName}/'
 
         
     TrainingDirectory: str = f"{DataDirectory}training"
