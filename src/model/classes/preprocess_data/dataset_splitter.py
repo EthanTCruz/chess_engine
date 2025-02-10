@@ -16,9 +16,9 @@ from tqdm import tqdm
 def create_rollup_table(
     yield_size: int = 2048,
     batch_size: int = 2048,  # Define the batch size for commits
-    train_pct: float = model_settings.TrainSize,
-    test_pct: float = model_settings.TestSize,
-    validation_pct: float = model_settings.ValidationSize,
+    train_pct: float = model_settings.TRAIN_SET_SIZE,
+    test_pct: float = model_settings.TEST_SET_SIZE,
+    validation_pct: float = model_settings.VALIDATION_SET_SIZE,
     db: Session = next(get_db())
 ):
     try:

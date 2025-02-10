@@ -91,9 +91,9 @@ class HDF5SingleFileDataset(Dataset):
 
 
 def get_dataloader(h5_path, 
-                   batch_size=ae_settings.DataLoaderBatchSize, 
+                   batch_size=ae_settings.DATALOADER_BATCH_SIZE, 
                    shuffle=True, 
-                   num_workers=ae_settings.numWorkers,
+                   num_workers=ae_settings.NUM_WORKERS,
                    transform=None):
     
     dataset = HDF5SingleFileDataset(h5_path,transform=transform)
@@ -107,19 +107,19 @@ def get_dataloader(h5_path,
     return loader
 
 def get_dataloaders(transform,
-                    batch_size=ae_settings.DataLoaderBatchSize,
-                    num_workers=ae_settings.numWorkers):
-    train_loader = get_dataloader(data_settings.TrainingDirectory,
+                    batch_size=ae_settings.DATALOADER_BATCH_SIZE,
+                    num_workers=ae_settings.NUM_WORKERS):
+    train_loader = get_dataloader(data_settings.TRAINING_DIR,
                               batch_size=batch_size,
                               shuffle=True,
                               num_workers=num_workers,
                               transform=transform)
-    test_loader = get_dataloader(data_settings.TestingDirectory,
+    test_loader = get_dataloader(data_settings.TESTING_DIR,
                                   batch_size=batch_size,
                                   shuffle=True,
                                   num_workers=num_workers,
                                   transform=transform)
-    valid_loader = get_dataloader(data_settings.ValidationDirectory,
+    valid_loader = get_dataloader(data_settings.VALIDATION_DIR,
                                   batch_size=batch_size,
                                   shuffle=True,
                                   num_workers=num_workers,
@@ -130,7 +130,10 @@ def get_dataloaders(transform,
 
 def get_dataloader_full_retrieval_time():
     num_epochs = 1
-    train_loader = get_dataloader(data_settings.TrainingDirectory, batch_size=ae_settings.DataLoaderBatchSize, shuffle=True, num_workers=ae_settings.numWorkers)
+    train_loader = get_dataloader(data_settings.TRAINING_DIR, 
+                                  batch_size=ae_settings.DATALOADER_BATCH_SIZE, 
+                                  shuffle=True, 
+                                  num_workers=ae_settings.NUM_WORKERS)
     start = time.time()
     i = 0
     for epoch in range(num_epochs):

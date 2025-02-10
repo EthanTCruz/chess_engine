@@ -18,13 +18,13 @@ class DeepChessModel(nn.Module):
         super(DeepChessModel, self).__init__()
 
 
-        self.encoder = get_encoder(model_path=f"{ae_settings.modelFilePath}autoencoder{ae_settings.LatenDims[-1]}.pth")
+        self.encoder = get_encoder(model_path=f"{ae_settings.MODEL_FILE_DIR}autoencoder{ae_settings.LATENT_DIMS[-1]}.pth")
 
         for param in self.encoder.parameters():
             param.requires_grad = False
 
 
-        self.evaluation = nn.Sequential(nn.Linear(ae_settings.LatenDims[-1], 256),  
+        self.evaluation = nn.Sequential(nn.Linear(ae_settings.LATENT_DIMS[-1], 256),  
                                         nn.ReLU(inplace=True),
                                         nn.Linear(256, 128),  
                                         nn.ReLU(inplace=True),

@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 
-engine = create_engine(settings.database_url, 
+engine = create_engine(settings.DATABASE_URL, 
                        connect_args={"check_same_thread": False, "timeout": 30},
                         poolclass=QueuePool,
                         pool_size=20,  

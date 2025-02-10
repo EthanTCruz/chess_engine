@@ -13,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 class AutoencoderTrainer:
     def __init__(self):
-        self.lr = ae_settings.learningRate
+        self.lr = ae_settings.LEARNING_RATE
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.num_epochs = ae_settings.EPOCHS
         self.transform = FlattenTransform()
@@ -92,12 +92,12 @@ class AutoencoderTrainer:
     def get_autoencoder(self):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         autoencoder = SingleInputAutoencoder(latent_dim=128).to(device)
-        for ld in ae_settings.LatenDims:
+        for ld in ae_settings.LATENT_DIMS:
             autoencoder = ExtendedAutoencoder(autoencoder,latent_dim=ld).to(device)
         return autoencoder
 
     def save_model(self,model, optimizer,model_name):
-        model_path = f"{ae_settings.modelFilePath}{model_name}.pth"
+        model_path = f"{ae_settings.MODEL_FILE_DIR}{model_name}.pth"
         torch.save({
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
@@ -131,7 +131,7 @@ class AutoencoderTrainer:
 
         # 4) Initialize the frozen model (encoder frozen, new layers on top)
         #    For example, output_dim=3 if you're predicting 3 values
-        for ld in ae_settings.LatenDims:
+        for ld in ae_settings.LATENT_DIMS:
             writer = SummaryWriter(log_dir=f'runs/autoencoder{ld}')
             autoencoder = ExtendedAutoencoder(autoencoder,latent_dim=ld).to(self.device)
             # 5) Train the new head

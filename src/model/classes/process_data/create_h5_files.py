@@ -28,8 +28,8 @@ def delete_all_files(directory):
 
 
 
-def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
-                                chunk_size: int = data_settings.ChunkSize):
+def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BATCH_SIZE,
+                                chunk_size: int = data_settings.H5PY_CHUNK_SIZE):
     """
     This version creates ONE h5 file for training, ONE for testing, ONE for validation,
     each containing chunked, resizable datasets ('features' and 'labels'),
@@ -43,9 +43,9 @@ def db_to_hdf5_files(batch_retrieval_size: int = data_settings.BatchSize,
     flattened_num_bitboards = num_bitboards * 8 * 8 + num_metada
 
     sets = {
-        data_settings.TrainingDirectory: GamePositionRollup.is_training_data.is_(True),
-        data_settings.TestingDirectory: GamePositionRollup.is_testing_data.is_(True),
-        data_settings.ValidationDirectory: GamePositionRollup.is_validation_data.is_(True),
+        data_settings.TRAINING_DIR: GamePositionRollup.is_training_data.is_(True),
+        data_settings.TESTING_DIR: GamePositionRollup.is_testing_data.is_(True),
+        data_settings.VALIDATION_DIR: GamePositionRollup.is_validation_data.is_(True),
     }
 
     for h5_dir, filter_conditions in sets.items():

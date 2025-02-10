@@ -6,16 +6,16 @@ import os
 
 
 
-def get_autoencoder(selected_encoder: int = ae_settings.LatenDims[-1]):
+def get_autoencoder(selected_encoder: int = ae_settings.LATENT_DIMS[-1]):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     autoencoder = SingleInputAutoencoder(latent_dim=128).to(device)
-    for ld in ae_settings.LatenDims:
+    for ld in ae_settings.LATENT_DIMS:
         autoencoder = ExtendedAutoencoder(autoencoder,latent_dim=ld).to(device)
         if ld == selected_encoder:
             break
     return autoencoder
 
-def get_encoder( model_path: str = f"{ae_settings.modelFilePath}autoencoder{ae_settings.LatenDims[-1]}.pth"):
+def get_encoder( model_path: str = f"{ae_settings.MODEL_FILE_DIR}autoencoder{ae_settings.LATENT_DIMS[-1]}.pth"):
     if os.path.exists(model_path) == False:
         print(f"Model not found at {model_path}")
         return None

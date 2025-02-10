@@ -30,9 +30,9 @@ def set_seed(seed=42):
 class ModelOperator:
     def __init__(self,model=None,transform=True):
         set_seed()
-        self.batch_size = model_settings.DataLoaderBatchSize
-        self.num_workers = model_settings.num_workers
-        self.model_path = model_settings.torch_model_file
+        self.batch_size = model_settings.DATALOADER_BATCH_SIZE
+        self.num_workers = model_settings.NUM_WORKERS
+        self.model_path = model_settings.FULL_MODEL_PATH
         self.transform = transform
         if model:
             self.model = model
@@ -50,7 +50,7 @@ class ModelOperator:
 
         return dataloaders
 
-    def train(self, learning_rate=model_settings.learning_rate, num_epochs=16, num_workers=model_settings.num_workers, save_model=True):
+    def train(self, learning_rate=model_settings.LEARNING_RATE, num_epochs=16, num_workers=model_settings.NUM_WORKERS, save_model=True):
         set_seed()
         num_workers = max(num_workers, self.num_workers)
         dataloaders = self.create_dataloaders(num_workers)

@@ -1,4 +1,4 @@
-from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import bitboards_to_array, sample_bitboard_dict, Bitboard_Creator
+from chess_engine.src.model.classes.bitboard_processing.bitboard_creator import sample_bitboard_dict
 import chess
 
 

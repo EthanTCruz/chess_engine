@@ -12,47 +12,63 @@ load_dotenv()
 
 class Settings(BaseSettings): 
 
-    BatchSize: int = 521
-
-    database_url: str = "sqlite:///src/model/data/gameData.db"
-
-    srcModelDirectory: str = './src/model'
-    pgn_file: str = f"{srcModelDirectory}/pgn/full_dataset/"
-    samplePgn: str = f"{srcModelDirectory}/pgn/sample_dataset/"
-    pgnDir: str = f"{srcModelDirectory}/pgn/"
-    pgnDatasetName: str = "sample_dataset"
-    # full_dataset
-    # sample_dataset
-    # autoencoder_dataset
-    pgnDataset: str = f"{pgnDir}{pgnDatasetName}/"
     
-    nnLogDir: str = "./chess_engine/logs/"
 
-    score_depth: int = 1
-    player: str = 'w'
-    endgame_table: str = f"{srcModelDirectory}/data/EndgameTbl/"
-    minimumEndgamePieces: int = 5
+    DATABASE_URL: str = "sqlite:///src/model/data/gameData.db"
 
-    UCB_Constant: float = 0.1
+    SRC_MODEL_DIR: str = './src/model'
 
+        
+    USE_SAMPLE_DATASET: bool = False
+    USE_AUTOENCODER_DATASET: bool = False
+    USE_FULL_DATASET: bool = False
+    
+    SAMPLE_PGN_DIR_NAME: str = "sample_dataset"
+    AUTOENCODER_PGN_DIR_NAME: str = "autoencoder_dataset"
+    FULL_PGN_DIR_NAME: str = "full_dataset"
+
+    PGN_DIR_NAME: str = "sample_dataset"
+    if USE_SAMPLE_DATASET + USE_AUTOENCODER_DATASET + USE_FULL_DATASET > 1:
+        raise ValueError("Only one dataset can be used at a time")
+    elif USE_SAMPLE_DATASET + USE_AUTOENCODER_DATASET + USE_FULL_DATASET == 0:
+         ValueError("No dataset selected")
+    if USE_SAMPLE_DATASET:
+        PGN_DIR_NAME = SAMPLE_PGN_DIR_NAME
+    elif USE_AUTOENCODER_DATASET:
+        PGN_DIR_NAME = AUTOENCODER_PGN_DIR_NAME
+    elif USE_FULL_DATASET:
+        PGN_DIR_NAME = FULL_PGN_DIR_NAME
+
+    PGN_DIR: str = f"{SRC_MODEL_DIR}/pgn/"
+
+    PGN_DATASET: str = f"{PGN_DIR}{PGN_DIR_NAME}/"
+    
+
+
+    SCORE_DEPTH: int = 1
+    PLAYER: str = 'w'
+    ENDGAME_TABLE: str = f"{SRC_MODEL_DIR}/data/EndgameTbl/"
+    MINIMUM_ENDGAME_PIECES: int = 5
+
+    UCB_CONSTANT: float = 0.1
+
+    SAVE_TO_BUCKET: bool = False
     GOOGLE_APPLICATION_CREDENTIALS: str = "C:\\Users\\ethan\\git\\Full_Chess_App\\chess_engine\\terraform\\secret.json"
     BUCKET_NAME: str = "chess-model-weights"
 
 
-    trainModel: bool = False
-    selfTrain: bool = False
-    trainDataExists: bool = True
-    
-    saveToBucket: bool = False
-    tuneParameters: bool = False
     
 
 
-    getData: bool = False
-    preprocessData: bool = False
-    processData: bool = False
-    trainModel: bool = False
-    trainEncoder: bool = True
+
+
+
+    EXTRACT_DATA: bool = False
+    PREPROCESS_DATA: bool = False
+    PROCESS_DATA: bool = False
+    TRAIN_ENCODER: bool = True
+    TRAIN_MODEL: bool = False
+    
     
 
     class Config:
@@ -63,26 +79,47 @@ settings = Settings()
 
 
 
-class ModelSettings(BaseSettings):
-    ModelFilePath: str =f"{settings.srcModelDirectory}/chess_model/"
-    ModelFilename: str = "model.h5"
-    SelfPlayModelFilename: str ="self_play_model"
-    nnModelCheckpoint: str = f"{ModelFilePath}checkpoints/"
-    data_dir: str = f"{settings.srcModelDirectory}/data"
-    
-    
-    EPOCHS: int = 100
-    learning_rate: float = 0.001
-    TestSize: float = 0.02
-    ValidationSize: float  = 0.02
-    TrainSize: float = 1.0 - TestSize - ValidationSize
+        
+class DataLoaderSettings(BaseSettings):
+    MAX_CACHE_SIZE: int = 5
+    BATCH_SIZE: int = 5096
+    BATCH_FILE_SIZE: int = 10000000
+    H5PY_CHUNK_SIZE: int = 1
+    DATA_DIR: str = f'{settings.SRC_MODEL_DIR}/data/{settings.PGN_DIR_NAME}/'
 
-    DataLoaderBatchSize: int = 4096
-    # Will only work as 0 while on windows
-    num_workers: int = 0
-    torch_model_file: str = f"{ModelFilePath}torch_model.pth"
+        
+    TRAINING_DIR: str = f"{DATA_DIR}training"
+    TESTING_DIR: str = f"{DATA_DIR}testing"
+    VALIDATION_DIR: str = f"{DATA_DIR}validation"
+    class Config:
+        env_prefix = 'DATALOADER_'
+        
+data_settings = DataLoaderSettings()
+
+
+class ModelSettings(BaseSettings):
     
-    modelType: str = "ChessEvalCNN"
+    DIR: str =f"{settings.SRC_MODEL_DIR}/chess_model/"
+    MODEL_FILENAME: str = "torch_model.pth"
+    FULL_MODEL_PATH: str = f"{DIR}{MODEL_FILENAME}"
+    SELF_PLAY_MODEL_FILENAME: str ="self_play_model"
+    CHECKPOINT_DIR: str = f"{DIR}checkpoints/"
+    DATA: str = f"{settings.SRC_MODEL_DIR}/data"
+    
+
+
+    EPOCHS: int = 100
+    LEARNING_RATE: float = 0.001
+    TEST_SET_SIZE: float = 0.02
+    VALIDATION_SET_SIZE: float  = 0.02
+    TRAIN_SET_SIZE: float = 1.0 - TEST_SET_SIZE - VALIDATION_SET_SIZE
+
+    DATALOADER_BATCH_SIZE: int = data_settings.BATCH_SIZE
+    # Will only work as 0 while on windows
+    NUM_WORKERS: int = 0
+
+    
+    MODEL_TYPE: str = "ChessEvalCNN"
     # SkipChessEvalCNN
     # ChessEvalDeepCNN
     # ChessEvalResNet
@@ -92,12 +129,12 @@ class ModelSettings(BaseSettings):
 model_settings = ModelSettings()
 
 class AutoEncoderSettings(BaseSettings):
-    learningRate: float = 1e-3
+    LEARNING_RATE: float = 1e-3
     EPOCHS: int = 17
-    DataLoaderBatchSize: int = model_settings.DataLoaderBatchSize
-    numWorkers: int = 0
-    LatenDims: list = [700,600,400,300,200,100]
-    modelFilePath: str = f"{model_settings.ModelFilePath}autoencoder/"
+    DATALOADER_BATCH_SIZE: int = model_settings.DATALOADER_BATCH_SIZE
+    NUM_WORKERS: int = 0
+    LATENT_DIMS: list = [700,600,400,300,200,100]
+    MODEL_FILE_DIR: str = f"{model_settings.DIR}autoencoder/"
     class Config:
         env_prefix = 'AE_MODEL_'
 
@@ -108,20 +145,3 @@ class DeepChessModelSettings(ModelSettings):
     latent_dim: int = 128
     class Config:
         env_prefix = 'DEEP_MODEL_'
-        
-class DataLoaderSettings(BaseSettings):
-    MaxCacheSize: int = 5
-    BatchSize: int = 5096
-    BatchFileSize: int = 10000000
-    ChunkSize: int = 1
-    DataDirectory: str = './src/model/data/'
-    DataDirectory = f'{DataDirectory}{settings.pgnDatasetName}/'
-
-        
-    TrainingDirectory: str = f"{DataDirectory}training"
-    TestingDirectory: str = f"{DataDirectory}testing"
-    ValidationDirectory: str = f"{DataDirectory}validation"
-    class Config:
-        env_prefix = 'DATALOADER_'
-        
-data_settings = DataLoaderSettings()
