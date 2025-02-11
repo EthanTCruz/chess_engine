@@ -19,7 +19,7 @@ class SingleInputAutoencoder(nn.Module):
         # Encoder
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, latent_dim),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
 
             # Optionally add an activation or not, depending on how you want your latent space
         )

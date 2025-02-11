@@ -10,6 +10,7 @@ from chess_engine.src.model.config.config import ae_settings
 from chess_engine.src.model.classes.models.autoencoder.ExtendedAutoencoder import ExtendedAutoencoder
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
+from chess_engine.src.model.classes.models.autoencoder.LossFunction import ChessBitboardLoss
 
 class AutoencoderTrainer:
     def __init__(self):
@@ -17,6 +18,7 @@ class AutoencoderTrainer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.num_epochs = ae_settings.EPOCHS
         self.transform = FlattenTransform()
+        
 
     def _train_epoch(self,model, dataloader, optimizer, criterion, device='cpu'):
         """

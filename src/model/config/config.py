@@ -144,6 +144,7 @@ class AutoEncoderSettings(BaseSettings):
     DATALOADER_BATCH_SIZE: int = model_settings.DATALOADER_BATCH_SIZE
     NUM_WORKERS: int = 0
     LATENT_DIMS: list = [700,600,400,300,200,100]
+    
     MODEL_FILE_DIR: str = f"{model_settings.DIR}autoencoder/"
     PERSIST_WORKERS: bool = False
     class Config:
