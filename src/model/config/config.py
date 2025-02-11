@@ -28,16 +28,7 @@ class Settings(BaseSettings):
     FULL_PGN_DIR_NAME: str = "full_dataset"
 
     PGN_DIR_NAME: str = "sample_dataset"
-    if USE_SAMPLE_DATASET + USE_AUTOENCODER_DATASET + USE_FULL_DATASET > 1:
-        raise ValueError("Only one dataset can be used at a time")
-    elif USE_SAMPLE_DATASET + USE_AUTOENCODER_DATASET + USE_FULL_DATASET == 0:
-         ValueError("No dataset selected")
-    if USE_SAMPLE_DATASET:
-        PGN_DIR_NAME = SAMPLE_PGN_DIR_NAME
-    elif USE_AUTOENCODER_DATASET:
-        PGN_DIR_NAME = AUTOENCODER_PGN_DIR_NAME
-    elif USE_FULL_DATASET:
-        PGN_DIR_NAME = FULL_PGN_DIR_NAME
+
 
     PGN_DIR: str = f"{SRC_MODEL_DIR}/pgn/"
 
@@ -75,9 +66,27 @@ class Settings(BaseSettings):
         env_prefix = 'MAIN_'
 
 
-settings = Settings()
 
+def init_settings():
+    settings = Settings()
+    if settings.USE_SAMPLE_DATASET + settings.USE_AUTOENCODER_DATASET + settings.USE_FULL_DATASET > 1:
+        raise ValueError("Only one dataset can be used at a time")
+    elif settings.USE_SAMPLE_DATASET + settings.USE_AUTOENCODER_DATASET + settings.USE_FULL_DATASET == 0:
+            ValueError("No dataset selected")
+    if settings.USE_SAMPLE_DATASET:
+        settings.PGN_DIR_NAME = settings.SAMPLE_PGN_DIR_NAME
+    elif settings.USE_AUTOENCODER_DATASET:
+        settings.PGN_DIR_NAME = settings.AUTOENCODER_PGN_DIR_NAME
+    elif settings.USE_FULL_DATASET:
+        settings.PGN_DIR_NAME = settings.FULL_PGN_DIR_NAME
 
+    settings.PGN_DIR = f"{settings.SRC_MODEL_DIR}/pgn/"
+
+    settings.PGN_DATASET = f"{settings.PGN_DIR}{settings.PGN_DIR_NAME}/"
+
+    return settings
+
+settings = init_settings()
 
         
 class DataLoaderSettings(BaseSettings):
