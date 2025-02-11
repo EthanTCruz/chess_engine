@@ -169,7 +169,7 @@ def get_dataloaders(transform,
                     batch_size=ae_settings.DATALOADER_BATCH_SIZE,
                     num_workers=ae_settings.NUM_WORKERS,
                     prefetch_factor=None,
-                    persistent_workers=ae_settings.PERSISTENT_WORKERS):
+                    persistent_workers=ae_settings.PERSIST_WORKERS):
     if num_workers > 0:
         prefetch_factor = 2
 
