@@ -89,7 +89,7 @@ class DataLoaderSettings(BaseSettings):
     BATCH_FILE_SIZE: int = 10000000
     H5PY_CHUNK_SIZE: int = 1
     DATA_DIR: str = f'{settings.SRC_MODEL_DIR}/data/{settings.PGN_DIR_NAME}/'
-    PREFETCH_SIZE: int = None
+    PREFETCH_SIZE: int = 0
 
 
         
