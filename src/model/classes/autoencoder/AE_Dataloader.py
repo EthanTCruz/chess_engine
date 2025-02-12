@@ -161,7 +161,8 @@ def get_dataloader(h5_path,
         worker_init_fn=lambda worker_id: worker_init_fn(worker_id, dataset.h5_file_path),
         shuffle=shuffle,
         prefetch_factor=prefetch_factor,
-        persistent_workers=persistent_workers
+        persistent_workers=persistent_workers,
+        pin_memory=ae_settings.USE_PIN_MEMORY
     )
     return loader
 
