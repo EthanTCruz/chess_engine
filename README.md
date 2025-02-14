@@ -52,6 +52,11 @@ Class 0: Precision: 0.6744, Recall: 0.6317, F1-Score: 0.6523
 Class 1: Precision: 0.6029, Recall: 0.6741, F1-Score: 0.6365
 Class 2: Precision: 0.6775, Recall: 0.6325, F1-Score: 0.6542
 
+02/13/25 - 1000 epoch autoencoder with 1000 epoch DeepChess model
+Class 0: Precision: 0.5456, Recall: 0.4714, F1-Score: 0.5058
+Class 1: Precision: 0.5314, Recall: 0.6585, F1-Score: 0.5881
+Class 2: Precision: 0.5377, Recall: 0.4555, F1-Score: 0.4932
+
 Train Loss: 0.6301, Train Accuracy: 71.31%, Val Loss: 0.7762, Val Accuracy: 65.01%
 
 docker tag chess_model:v1 ethancruz/chess_model
