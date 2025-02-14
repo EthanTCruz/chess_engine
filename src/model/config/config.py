@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     PGN_DIR: str = f"{SRC_MODEL_DIR}/pgn/"
 
     PGN_DATASET: str = f"{PGN_DIR}{PGN_DIR_NAME}/"
+
+    PGN_NUM_WORKERS: int = 4
     
 
 

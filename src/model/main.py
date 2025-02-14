@@ -92,7 +92,7 @@ def train_encoder():
 def extract_data(pgn_file = pgnDataset,db: Session = SessionLocal()):
     cowsay.cow(f"Converting PGN's to SQLITE")    
     delete_all_game_positions(db = db)
-    pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=4)
+    pgn_obj = PGNProcessor(pgn_dir=pgn_file, num_workers=settings.PGN_NUM_WORKERS)
     pgn_obj.split_large_pgn_files(delete_after_split=True)
     pgn_obj.process_all_pgns_parallel()
 
