@@ -7,7 +7,7 @@ from chess_engine.src.model.classes.sqlite.dependencies import insert_bulk_board
 import sqlalchemy
 
 class PGNProcessor:
-    def __init__(self, pgn_dir, batch_size=5000, num_workers=4):
+    def __init__(self, pgn_dir, batch_size=50, num_workers=4):
         self.pgn_dir = pgn_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
