@@ -145,6 +145,7 @@ class AutoEncoderSettings(BaseSettings):
     MODEL_FILE_DIR: str = f"{model_settings.DIR}autoencoder/"
     PERSIST_WORKERS: bool = False
     USE_PIN_MEMORY: bool = False
+    USE_IN_MEMORY_DATASET: bool = False
     class Config:
         env_prefix = 'AE_MODEL_'
 
