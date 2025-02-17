@@ -25,10 +25,13 @@ class DeepChessModel(nn.Module):
 
 
         self.evaluation = nn.Sequential(nn.Linear(ae_settings.LATENT_DIMS[-1], 256),  
+                                        nn.BatchNorm1d(256),
                                         nn.ReLU(inplace=True),
-                                        nn.Linear(256, 128),  
+                                        nn.Linear(256, 128), 
+                                        nn.BatchNorm1d(128), 
                                         nn.ReLU(inplace=True),
                                         nn.Linear(128, 64),  
+                                        nn.BatchNorm1d(64),
                                         nn.ReLU(inplace=True),
                                         nn.Linear(64, 3))
 

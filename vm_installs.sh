@@ -14,5 +14,5 @@ tmux new -s train
 # mkdir src/model/data/sample/training
 # mkdir src/model/data/sample/validation
 # mkdir src/model/chess_model/autoencoder
-cp src/model/data/sample/ src/model/data/autoencoder_dataset/ -r
+cp ./.sample-env ./.env
 sqlite3 src/model/data/sampleGameData.db
