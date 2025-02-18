@@ -60,17 +60,23 @@ class ModelOperator:
 
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
+
         writer = SummaryWriter(log_dir='runs/cnn')
 
         for epoch in range(num_epochs):
             train_loss, train_acc, *_ = self._run_epoch(model, dataloaders['train'], optimizer, criterion, device, train=True)
             val_loss, val_acc, *_ = self._run_epoch(model, dataloaders['valid'], optimizer, criterion, device)
+
+            current_lr = scheduler.get_last_lr()[0]
+            writer.add_scalar('Learning_Rate', current_lr, epoch)
             writer.add_scalar('Loss/train', train_loss, epoch)
             writer.add_scalar('Loss/validation', val_loss, epoch)
             writer.add_scalar('Accuracy/train', train_acc, epoch)
             writer.add_scalar('Accuracy/validation', val_acc, epoch)
             print(f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Train Accuracy: {train_acc:.2f}%, "
                   f"Val Loss: {val_loss:.4f}, Val Accuracy: {val_acc:.2f}%")
+            scheduler.step()
 
         test_loss, test_acc, test_preds, test_labels = self._run_epoch(model, dataloaders['test'], optimizer, criterion, device)
 
