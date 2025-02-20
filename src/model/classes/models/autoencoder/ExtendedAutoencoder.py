@@ -17,11 +17,13 @@ class ExtendedAutoencoder(nn.Module):
         
         
         self.enc_latent_layers = nn.Sequential(nn.Linear(trained_autoencoder.latent_dim, self.latent_dim ),
-                                     nn.ReLU(inplace=True),)
+                                     nn.LeakyReLU(inplace=True),
+                                     nn.BatchNorm1d(self.latent_dim))
 
 
         self.dec_latent_layers = nn.Sequential(nn.Linear(self.latent_dim , trained_autoencoder.latent_dim),
-                                                nn.ReLU(inplace=True),)
+                                                nn.LeakyReLU(inplace=True),
+                                                nn.BatchNorm1d(trained_autoencoder.latent_dim))
         # Reuse the old decoder
         self.decoder = trained_autoencoder.get_decoder()
 

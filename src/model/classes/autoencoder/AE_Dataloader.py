@@ -133,16 +133,21 @@ class InMemoryHDF5Dataset(Dataset):
             labels_tensor = torch.from_numpy(self.labels[idx]).float().to(self.device)
             return features_tensor, metadata_tensor, labels_tensor
 
-def get_inmemory_dataloader(h5_path, batch_size, shuffle, num_workers, transform=None):
+def get_inmemory_dataloader(h5_path, batch_size, shuffle, num_workers, transform=None,
+                            prefetch_factor=None,
+                            persistent_workers=False):
     dataset = InMemoryHDF5Dataset(h5_path, transform=transform)
     loader = DataLoader(
         dataset,
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=num_workers,  # You can still use workers for collating/processing the batches.
-        pin_memory=True  # Optionally, pin memory for faster GPU transfer.
+        prefetch_factor=prefetch_factor,
+        persistent_workers=persistent_workers,
+        pin_memory=ae_settings.USE_PIN_MEMORY
     )
     return loader
+
 
 
 def get_dataloader(h5_path, 
@@ -151,50 +156,56 @@ def get_dataloader(h5_path,
                     num_workers=ae_settings.NUM_WORKERS,
                     transform=None,
                     prefetch_factor=None,
-                    persistent_workers=False):
-    
-    dataset = HDF5SingleFileDataset(h5_path,transform=transform)
-    loader = DataLoader(
-        dataset,
-        batch_size=batch_size,
-        num_workers=num_workers,
-        worker_init_fn=lambda worker_id: worker_init_fn(worker_id, dataset.h5_file_path),
-        shuffle=shuffle,
-        prefetch_factor=prefetch_factor,
-        persistent_workers=persistent_workers,
-        pin_memory=ae_settings.USE_PIN_MEMORY
-    )
+                    persistent_workers=False,
+                    in_memory_dataloader=False):
+    if in_memory_dataloader:
+        dataset = InMemoryHDF5Dataset(h5_path, transform=transform)
+        loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,  # You can still use workers for collating/processing the batches.
+            prefetch_factor=prefetch_factor,
+            persistent_workers=persistent_workers,
+            pin_memory=ae_settings.USE_PIN_MEMORY
+        )
+    else:
+        dataset = HDF5SingleFileDataset(h5_path,transform=transform)
+        loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            worker_init_fn=lambda worker_id: worker_init_fn(worker_id, dataset.h5_file_path),
+            shuffle=shuffle,
+            prefetch_factor=prefetch_factor,
+            persistent_workers=persistent_workers,
+            pin_memory=ae_settings.USE_PIN_MEMORY
+        )
     return loader
 
 def get_dataloaders(transform,
                     batch_size=ae_settings.DATALOADER_BATCH_SIZE,
                     num_workers=ae_settings.NUM_WORKERS,
                     prefetch_factor=None,
-                    persistent_workers=ae_settings.PERSIST_WORKERS):
+                    persistent_workers=ae_settings.PERSIST_WORKERS,
+                    in_memory_dataloader=ae_settings.USE_IN_MEMORY_DATASET):
     if num_workers > 0:
         prefetch_factor = 2
 
-    train_loader = get_dataloader(data_settings.TRAINING_DIR,
-                              batch_size=batch_size,
-                              shuffle=True,
-                              num_workers=num_workers,
-                              transform=transform,
-                              prefetch_factor=prefetch_factor,
-                              persistent_workers=persistent_workers)
-    test_loader = get_dataloader(data_settings.TESTING_DIR,
-                                  batch_size=batch_size,
-                                  shuffle=True,
-                                  num_workers=num_workers,
-                                  transform=transform,
-                                  prefetch_factor=prefetch_factor,
-                              persistent_workers=persistent_workers)
-    valid_loader = get_dataloader(data_settings.VALIDATION_DIR,
-                                  batch_size=batch_size,
-                                  shuffle=True,
-                                  num_workers=num_workers,
-                                  transform=transform,
-                                  prefetch_factor=prefetch_factor,
-                              persistent_workers=persistent_workers)
+    kwargs = {"batch_size":batch_size,
+                "shuffle":True,
+                "num_workers":num_workers,
+                "transform":transform,
+                "prefetch_factor":prefetch_factor,
+                "persistent_workers":persistent_workers,
+                "in_memory_dataloader":in_memory_dataloader}
+    
+    train_loader = get_dataloader(data_settings.TRAINING_DIR,**kwargs)
+
+    test_loader = get_dataloader(data_settings.TESTING_DIR,**kwargs)
+
+    valid_loader = get_dataloader(data_settings.VALIDATION_DIR,**kwargs)
+
     return train_loader, test_loader, valid_loader
 
 

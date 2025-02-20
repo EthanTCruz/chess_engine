@@ -116,7 +116,7 @@ class ModelSettings(BaseSettings):
 
 
     EPOCHS: int = 100
-    LEARNING_RATE: float = 0.001
+    LEARNING_RATE: float = 0.01
     TEST_SET_SIZE: float = 0.02
     VALIDATION_SET_SIZE: float  = 0.02
     TRAIN_SET_SIZE: float = 1.0 - TEST_SET_SIZE - VALIDATION_SET_SIZE
@@ -145,6 +145,7 @@ class AutoEncoderSettings(BaseSettings):
     MODEL_FILE_DIR: str = f"{model_settings.DIR}autoencoder/"
     PERSIST_WORKERS: bool = False
     USE_PIN_MEMORY: bool = False
+    USE_IN_MEMORY_DATASET: bool = False
     class Config:
         env_prefix = 'AE_MODEL_'
 

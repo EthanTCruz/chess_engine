@@ -14,7 +14,7 @@ def numpy_bitboards_to_board(bitboards):
     fen_symbols = []
     
     for key in bb_keys:
-        color, piece = key.split(' ')
+        color, piece, bb = key.split(' ')
         if piece == "knight":
             piece = "n"
         if color == 'white':
