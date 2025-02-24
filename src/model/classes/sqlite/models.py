@@ -36,6 +36,7 @@ class GamePositions(Base,WinBucketsMixin):
     turn = Column(String, index=True)
     original_fen = Column(String, index=True)
     original_victor = Column(String, index=True)
+    
     white_wins = Column(Integer)
     black_wins = Column(Integer)
     stalemates = Column(Integer)
